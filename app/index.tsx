@@ -3,13 +3,16 @@ import { useRouter } from 'expo-router';
 import { useState, useEffect } from 'react';
 import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, Dimensions } from 'react-native';
 import { useColorScheme } from 'react-native';
-import { PaperProvider, Card, Button, Modal, Portal, Text as PaperText, useTheme } from 'react-native-paper';
+import { PaperProvider, Card, Button, Portal, Text as PaperText, useTheme } from 'react-native-paper';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useNotes } from '../src/context/NoteContext';
 import Animated, { FadeIn, FadeOut, SlideInDown, SlideOutUp } from 'react-native-reanimated';
+import { ReactNode } from 'react';
+import { Modal } from 'react-native-paper';
 
-// Gradient background yang dinamis namun tidak mengganggu
-const GradientBackground = ({ children }) => {
+
+// Gradient background yang tidak mengganggu keterbacaan
+const GradientBackground = ({ children }: { children: ReactNode }) => {
   const { colors } = useTheme();
   return (
     <View style={[styles.background, { backgroundColor: colors.background }]}>
@@ -50,19 +53,19 @@ export default function MainPage() {
     }
   };
 
-  const getNoteColor = (index) => {
-    const colors = [
-      theme.colors.primary,
-      theme.colors.secondary,
-      '#FF6B6B',
-      '#4ECDC4',
-      '#45B7D1',
-      '#96CEB4',
-      '#FECA57',
-      '#FF9FF3',
-    ];
-    return colors[index % colors.length];
-  };
+  const getNoteColor = (index: number): string => {
+  const colors = [
+    '#BB86FC',
+    '#03DAC6',
+    '#CF6679',
+    '#4CAF50',
+    '#FF9800',
+    '#2196F3',
+    '#9C27B0',
+    '#E91E63',
+  ];
+  return colors[index % colors.length];
+};
 
   const renderEmptyState = () => (
     <Animated.View entering={FadeIn.duration(500)} style={styles.emptyState}>
@@ -75,7 +78,7 @@ export default function MainPage() {
       <Text style={[styles.emptyTitle, { color: theme.colors.onBackground }]}>
         Belum Ada Catatan Perhitungan
       </Text>
-      <Text style={[styles.emptySubtitle, { color: theme.colors.onSurfaceVariant }]}>
+      <Text style={[styles.emptySubtitle, { color: theme.colors.outline }]}>
         Mulai dengan menambahkan catatan usaha baru Anda
       </Text>
       <TouchableOpacity 
@@ -93,35 +96,47 @@ export default function MainPage() {
       ...theme,
       colors: {
         ...theme.colors,
-        primary: '#6C4BFF', // Warna modern untuk primary
-        secondary: '#0D9488', // Teal untuk secondary
-        surface: colorScheme === 'dark' ? '#1E1B2D' : '#FFFFFF',
+        primary: '#BB86FC',
+        secondary: '#03DAC6',
+        surface: colorScheme === 'dark' ? '#2D2B3D' : '#FFFFFF',
         background: colorScheme === 'dark' ? '#12111D' : '#F8FAFF',
+        onBackground: colorScheme === 'dark' ? '#E0E0E0' : '#1F1F1F',
+        onSurface: colorScheme === 'dark' ? '#E0E0E0' : '#1F1F1F',
+        outline: colorScheme === 'dark' ? '#888888' : '#646464',
       }
     }}>
       <GradientBackground>
         <View style={styles.header}>
           <Text style={[styles.title, { color: theme.colors.onBackground }]}>NGITUNG</Text>
-          <Text style={[styles.subtitle, { color: theme.colors.onSurfaceVariant }]}>
+          <Text style={[styles.subtitle, { color: theme.colors.outline }]}>
             Catatan Usaha Anda
           </Text>
           
-          <View style={styles.searchContainer}>
-            <MaterialIcons name="search" size={20} color={theme.colors.onSurfaceVariant} />
+          <View style={[
+            styles.searchContainer,
+            { 
+              backgroundColor: colorScheme === 'dark' ? 'rgba(45, 43, 61, 0.8)' : '#FFFFFF',
+              borderColor: colorScheme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : '#E2E8F0'
+            }
+          ]}>
+            <MaterialIcons name="search" size={20} color={theme.colors.outline} />
             <TextInput
-              style={[styles.searchInput, { 
-                color: theme.colors.onSurface, 
-                backgroundColor: colorScheme === 'dark' ? 'rgba(255,255,255,0.1)' : '#FFF',
-                borderColor: colorScheme === 'dark' ? 'rgba(255,255,255,0.1)' : '#E2E8F0'
-              }]}
+              style={[
+                styles.searchInput,
+                { 
+                  color: theme.colors.onSurface,
+                  backgroundColor: 'transparent'
+                }
+              ]}
               placeholder="Cari usaha..."
-              placeholderTextColor={theme.colors.onSurfaceVariant}
+              placeholderTextColor={theme.colors.outline}
               value={searchQuery}
               onChangeText={setSearchQuery}
+              selectionColor={theme.colors.primary}
             />
             {searchQuery ? (
               <TouchableOpacity onPress={() => setSearchQuery('')}>
-                <MaterialIcons name="close" size={20} color={theme.colors.onSurfaceVariant} />
+                <MaterialIcons name="close" size={20} color={theme.colors.outline} />
               </TouchableOpacity>
             ) : null}
           </View>
@@ -148,11 +163,12 @@ export default function MainPage() {
                       pathname: '/(tabs)/detail/[id]',
                       params: { id: note.id }
                     })}
+                    activeOpacity={0.95}
                   >
                     <Card style={[
                       styles.noteCard,
                       { 
-                        backgroundColor: colorScheme === 'dark' ? 'rgba(30, 27, 45, 0.7)' : '#FFFFFF',
+                        backgroundColor: colorScheme === 'dark' ? 'rgba(45, 43, 61, 0.8)' : '#FFFFFF',
                         borderColor: getNoteColor(index),
                         shadowColor: getNoteColor(index),
                       }
@@ -162,32 +178,34 @@ export default function MainPage() {
                           styles.colorBadge,
                           { backgroundColor: getNoteColor(index) }
                         ]} />
-                        <Text style={styles.noteName}>{note.name}</Text>
-                        <TouchableOpacity style={styles.moreButton}>
+                        <Text style={[styles.noteName, { color: theme.colors.onSurface }]} numberOfLines={1}>
+                          {note.name}
+                        </Text>
+                        <TouchableOpacity style={styles.moreButton} disabled>
                           <MaterialIcons 
                             name="more-vert" 
-                            size={20} 
-                            color={theme.colors.onSurfaceVariant} 
+                            size={24} 
+                            color={theme.colors.outline} 
                           />
                         </TouchableOpacity>
                       </View>
                       
                       <View style={styles.cardContent}>
                         <View style={styles.priceContainer}>
-                          <Text style={[styles.noteLabel, { color: theme.colors.onSurfaceVariant }]}>
+                          <Text style={[styles.noteLabel, { color: theme.colors.outline }]}>
                             Harga Jual:
                           </Text>
-                          <Text style={[styles.notePrice, { color: theme.colors.primary }]}>
-                            {note.price}
+                          <Text style={[styles.notePrice, { color: '#BB86FC' }]}>
+                            {note.price || 'Rp 0'}
                           </Text>
                         </View>
                         
                         <View style={styles.bppContainer}>
-                          <Text style={[styles.noteLabel, { color: theme.colors.onSurfaceVariant }]}>
+                          <Text style={[styles.noteLabel, { color: theme.colors.outline }]}>
                             BPP:
                           </Text>
-                          <Text style={[styles.noteBpp, { color: theme.colors.secondary }]}>
-                            {note.bpp}
+                          <Text style={[styles.noteBpp, { color: '#03DAC6' }]}>
+                            {note.bpp || 'Rp 0'}
                           </Text>
                         </View>
                       </View>
@@ -196,12 +214,12 @@ export default function MainPage() {
                         <View style={styles.dateContainer}>
                           <MaterialIcons 
                             name="update" 
-                            size={14} 
-                            color={theme.colors.onSurfaceVariant} 
+                            size={16} 
+                            color={theme.colors.outline} 
                           />
-                          <Text style={[styles.noteUpdated, { color: theme.colors.onSurfaceVariant }]}>
+                          <Text style={[styles.noteUpdated, { color: theme.colors.outline }]}>
                             {new Date(note.updatedAt).toLocaleDateString('id-ID', {
-                              day: 'numeric',
+                              day: '2-digit',
                               month: 'short',
                               year: 'numeric'
                             })}
@@ -210,10 +228,10 @@ export default function MainPage() {
                         <View style={styles.profitBadge}>
                           <MaterialIcons 
                             name="trending-up" 
-                            size={12} 
-                            color={theme.colors.primary} 
+                            size={14} 
+                            color="#BB86FC" 
                           />
-                          <Text style={[styles.profitText, { color: theme.colors.primary }]}>
+                          <Text style={[styles.profitText, { color: '#BB86FC' }]}>
                             30%
                           </Text>
                         </View>
@@ -236,6 +254,7 @@ export default function MainPage() {
               }
             ]} 
             onPress={handleAddNote}
+            activeOpacity={0.85}
           >
             <MaterialIcons name="add" size={32} color="white" />
           </TouchableOpacity>
@@ -247,7 +266,10 @@ export default function MainPage() {
             onDismiss={() => setModalVisible(false)}
             contentContainerStyle={[
               styles.modalContainer,
-              { backgroundColor: theme.colors.surface }
+              { 
+                backgroundColor: colorScheme === 'dark' ? '#2D2B3D' : '#FFFFFF',
+                borderColor: colorScheme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : '#E2E8F0'
+              }
             ]}
           >
             <View style={styles.modalHeader}>
@@ -255,7 +277,7 @@ export default function MainPage() {
                 Tambah Catatan Baru
               </Text>
               <TouchableOpacity onPress={() => setModalVisible(false)}>
-                <MaterialIcons name="close" size={24} color={theme.colors.onSurfaceVariant} />
+                <MaterialIcons name="close" size={28} color={theme.colors.outline} />
               </TouchableOpacity>
             </View>
             
@@ -263,21 +285,22 @@ export default function MainPage() {
               style={[
                 styles.modalInput,
                 { 
-                  backgroundColor: colorScheme === 'dark' ? 'rgba(255,255,255,0.1)' : '#F8FAFF',
+                  backgroundColor: colorScheme === 'dark' ? 'rgba(45, 43, 61, 0.8)' : '#F8FAFF',
                   color: theme.colors.onSurface,
-                  borderColor: colorScheme === 'dark' ? 'rgba(255,255,255,0.1)' : '#E2E8F0'
+                  borderColor: colorScheme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : '#E2E8F0'
                 }
               ]}
               placeholder="Nama usaha..."
-              placeholderTextColor={theme.colors.onSurfaceVariant}
+              placeholderTextColor={theme.colors.outline}
               value={newNoteName}
               onChangeText={setNewNoteName}
               autoFocus
               returnKeyType="done"
               onSubmitEditing={handleSaveNote}
+              selectionColor={theme.colors.primary}
             />
             
-            <Text style={[styles.modalHint, { color: theme.colors.onSurfaceVariant }]}>
+            <Text style={[styles.modalHint, { color: theme.colors.outline }]}>
               Contoh: Bakso Ayam, Jasa Desain, Toko Online
             </Text>
             
@@ -287,6 +310,8 @@ export default function MainPage() {
                 onPress={() => setModalVisible(false)}
                 textColor={theme.colors.primary}
                 style={styles.modalButton}
+                labelStyle={{ fontSize: 16 }}
+                contentStyle={{ height: 50 }}
               >
                 Batal
               </Button>
@@ -296,6 +321,8 @@ export default function MainPage() {
                 buttonColor={theme.colors.primary}
                 textColor="white"
                 style={styles.modalButton}
+                labelStyle={{ fontSize: 16 }}
+                contentStyle={{ height: 50 }}
                 disabled={!newNoteName.trim()}
               >
                 Buat Catatan
@@ -321,7 +348,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: 120,
-    backgroundColor: 'rgba(108, 75, 255, 0.1)',
+    backgroundColor: 'rgba(187, 134, 252, 0.1)',
   },
   header: {
     paddingHorizontal: 20,
@@ -329,124 +356,140 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   title: {
-    fontSize: 32,
-    fontWeight: 'bold',
+    fontSize: 34,
+    fontWeight: '800',
     textAlign: 'center',
     marginBottom: 4,
+    letterSpacing: -0.5,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 17,
     textAlign: 'center',
     marginBottom: 20,
+    fontWeight: '500',
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 16,
     paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingVertical: 12,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    marginBottom: 24,
   },
   searchInput: {
     flex: 1,
     fontSize: 16,
-    paddingVertical: 4,
-    paddingHorizontal: 8,
+    padding: 0,
+    marginLeft: 8,
+    fontWeight: '500',
   },
   notesList: {
     flex: 1,
     paddingHorizontal: 20,
   },
   scrollViewContent: {
-    paddingBottom: 90,
+    paddingBottom: 100,
   },
   cardContainer: {
-    marginBottom: 16,
+    marginBottom: 18,
   },
   noteCard: {
     borderRadius: 20,
     borderWidth: 1.5,
-    padding: 16,
+    padding: 18,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 4,
+      height: 6,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 4,
   },
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 16,
   },
   colorBadge: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    marginRight: 10,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    marginRight: 12,
   },
   noteName: {
     flex: 1,
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: 20,
+    fontWeight: '700',
+    letterSpacing: -0.3,
   },
   moreButton: {
     padding: 4,
   },
   cardContent: {
-    marginBottom: 12,
+    marginBottom: 16,
   },
   priceContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 6,
+    marginBottom: 10,
   },
   bppContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.08)',
+    paddingTop: 12,
   },
   noteLabel: {
-    fontSize: 14,
+    fontSize: 16,
+    fontWeight: '500',
   },
   notePrice: {
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontSize: 24,
+    fontWeight: '800',
+    letterSpacing: -0.5,
+    textAlign: 'right',
+    textShadowColor: 'rgba(187, 134, 252, 0.3)',
+    textShadowRadius: 1,
   },
   noteBpp: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 22,
+    fontWeight: '700',
+    letterSpacing: -0.4,
+    textAlign: 'right',
+    textShadowColor: 'rgba(3, 218, 198, 0.3)',
+    textShadowRadius: 1,
   },
   cardFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingTop: 10,
+    paddingTop: 14,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(0,0,0,0.05)',
+    borderTopColor: 'rgba(255, 255, 255, 0.08)',
   },
   dateContainer: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   noteUpdated: {
-    fontSize: 12,
-    marginLeft: 4,
+    fontSize: 15,
+    marginLeft: 6,
+    fontWeight: '500',
   },
   profitBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(108, 75, 255, 0.15)',
-    paddingHorizontal: 8,
+    backgroundColor: 'rgba(187, 134, 252, 0.15)',
+    paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 12,
+    borderRadius: 14,
   },
   profitText: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: 16,
+    fontWeight: '700',
     marginLeft: 4,
   },
   fabContainer: {
@@ -455,53 +498,56 @@ const styles = StyleSheet.create({
     bottom: 32,
   },
   fab: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: 68,
+    height: 68,
+    borderRadius: 34,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#6C4BFF',
     shadowOffset: {
       width: 0,
-      height: 4,
+      height: 8,
     },
     shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 5,
+    shadowRadius: 12,
+    elevation: 6,
   },
   modalContainer: {
     margin: 20,
     borderRadius: 24,
-    padding: 20,
+    padding: 24,
+    borderWidth: 1,
   },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 24,
   },
   modalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
+    fontSize: 22,
+    fontWeight: '700',
   },
   modalInput: {
     borderWidth: 1,
     borderRadius: 16,
-    padding: 16,
-    fontSize: 16,
-    marginBottom: 12,
+    padding: 18,
+    fontSize: 18,
+    marginBottom: 16,
+    fontWeight: '600',
   },
   modalHint: {
-    fontSize: 13,
-    marginBottom: 24,
+    fontSize: 15,
+    marginBottom: 28,
     textAlign: 'center',
+    lineHeight: 22,
   },
   modalActions: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 16,
   },
   modalButton: {
     flex: 1,
+    borderRadius: 14,
   },
   emptyState: {
     alignItems: 'center',
@@ -510,33 +556,34 @@ const styles = StyleSheet.create({
     marginTop: 40,
   },
   emptyIcon: {
-    marginBottom: 16,
+    marginBottom: 20,
   },
   emptyTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
+    fontSize: 22,
+    fontWeight: '700',
     textAlign: 'center',
-    marginBottom: 8,
+    marginBottom: 10,
   },
   emptySubtitle: {
-    fontSize: 16,
+    fontSize: 17,
     textAlign: 'center',
-    marginBottom: 30,
-    maxWidth: 300,
+    marginBottom: 36,
+    lineHeight: 24,
+    paddingHorizontal: 20,
   },
   primaryButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 24,
+    paddingVertical: 14,
+    paddingHorizontal: 26,
     borderRadius: 16,
   },
   buttonIcon: {
-    marginRight: 8,
+    marginRight: 10,
   },
   buttonText: {
     color: 'white',
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '600',
   },
 });
