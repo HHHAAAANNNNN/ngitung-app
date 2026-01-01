@@ -7,6 +7,11 @@ export interface Note {
   name: string;
   price: string;
   bpp: string;
+  color?: string;
+  fixedCosts?: { id: string; name: string; amount: number }[];
+  variableCosts?: { id: string; name: string; amount: number; quantity: number }[];
+  profitMargin?: number;
+  estimatedSales?: number;
   updatedAt: number; // Unix timestamp
 }
 
@@ -49,5 +54,18 @@ export const deleteNote = async (id: string) => {
     await AsyncStorage.setItem('@ngitung_notes', JSON.stringify(notes));
   } catch (e) {
     console.error('Gagal hapus note:', e);
+  }
+};
+
+export const updateNote = async (updatedNote: Note) => {
+  try {
+    let notes = await getNotes();
+    const index = notes.findIndex(note => note.id === updatedNote.id);
+    if (index !== -1) {
+      notes[index] = { ...updatedNote, updatedAt: Date.now() };
+      await AsyncStorage.setItem('@ngitung_notes', JSON.stringify(notes));
+    }
+  } catch (e) {
+    console.error('Gagal update note:', e);
   }
 };

@@ -40,8 +40,10 @@ const GradientBackground = ({ children }: { children: React.ReactNode }) => {
 export default function MainPage() {
   const colorScheme = useColorScheme();
   const router = useRouter();
-  const { notes, addNote } = useNotes();
+  const { notes, addNote, deleteNote, updateNote } = useNotes();
   const [modalVisible, setModalVisible] = useState(false);
+  const [settingsModalVisible, setSettingsModalVisible] = useState(false);
+  const [selectedNote, setSelectedNote] = useState<Note | null>(null);
   const [newNoteName, setNewNoteName] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const { width } = useWindowDimensions();
@@ -72,7 +74,8 @@ export default function MainPage() {
   }, [searchQuery, notes]);
 
   // Note color generator
-  const getNoteColor = useCallback((index: number): string => {
+  const getNoteColor = useCallback((index: number, note?: Note): string => {
+    if (note?.color) return note.color;
     const colors = [
       '#A78BFA',
       '#34D399',
@@ -85,6 +88,11 @@ export default function MainPage() {
     ];
     return colors[index % colors.length];
   }, [theme]);
+
+  const availableColors = [
+    '#A78BFA', '#34D399', '#F472B6', '#60A5FA',
+    '#FBBF24', '#FB923C', '#A855F7', '#EC4899',
+  ];
 
   // Handlers
   const handleAddNote = useCallback(() => {
@@ -115,6 +123,25 @@ export default function MainPage() {
       params: { id }
     });
   }, [router]);
+
+  const handleOpenSettings = useCallback((note: Note) => {
+    setSelectedNote(note);
+    setSettingsModalVisible(true);
+  }, []);
+
+  const handleColorChange = useCallback(async (color: string) => {
+    if (selectedNote) {
+      await updateNote({ ...selectedNote, color });
+      setSettingsModalVisible(false);
+    }
+  }, [selectedNote, updateNote]);
+
+  const handleDeleteNote = useCallback(async () => {
+    if (selectedNote) {
+      await deleteNote(selectedNote.id);
+      setSettingsModalVisible(false);
+    }
+  }, [selectedNote, deleteNote]);
 
   // Empty state component
   const EmptyState = useMemo(() => (
@@ -195,8 +222,9 @@ export default function MainPage() {
               key={note.id}
               note={note}
               index={index}
-              color={getNoteColor(index)}
+              color={getNoteColor(index, note)}
               onPress={() => handleNavigateToDetail(note.id)}
+              onSettings={() => handleOpenSettings(note)}
               theme={theme}
             />
           ))
@@ -224,6 +252,16 @@ export default function MainPage() {
         colorScheme={colorScheme}
         theme={theme}
       />
+
+      <SettingsModal
+        visible={settingsModalVisible}
+        onClose={() => setSettingsModalVisible(false)}
+        note={selectedNote}
+        availableColors={availableColors}
+        onColorChange={handleColorChange}
+        onDelete={handleDeleteNote}
+        theme={theme}
+      />
     </GradientBackground>
   );
 }
@@ -237,10 +275,11 @@ interface NoteCardProps {
   index: number;
   color: string;
   onPress: () => void;
+  onSettings: () => void;
   theme: any;
 }
 
-const NoteCard = React.memo(({ note, color, onPress, theme, index }: NoteCardProps) => {
+const NoteCard = React.memo(({ note, color, onPress, onSettings, theme, index }: NoteCardProps) => {
   return (
     <Animated.View 
       entering={SlideInDown.delay(100 * Math.min(10, index)).duration(300)}
@@ -264,7 +303,16 @@ const NoteCard = React.memo(({ note, color, onPress, theme, index }: NoteCardPro
             <Text style={[styles.noteName, { color: theme.colors.text }]} numberOfLines={1}>
               {note.name}
             </Text>
-            <View style={[styles.statusDot, { backgroundColor: theme.colors.secondary }]} />
+            <TouchableOpacity 
+              onPress={(e) => {
+                e.stopPropagation();
+                onSettings();
+              }}
+              style={styles.settingsButton}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <MaterialIcons name="more-vert" size={20} color={theme.colors.outline} />
+            </TouchableOpacity>
           </View>
           
           <View style={styles.cardContent}>
@@ -449,6 +497,103 @@ const AddNoteModal = React.memo(({
   );
 });
 
+interface SettingsModalProps {
+  visible: boolean;
+  onClose: () => void;
+  note: Note | null;
+  availableColors: string[];
+  onColorChange: (color: string) => void;
+  onDelete: () => void;
+  theme: any;
+}
+
+const SettingsModal = React.memo(({
+  visible,
+  onClose,
+  note,
+  availableColors,
+  onColorChange,
+  onDelete,
+  theme
+}: SettingsModalProps) => {
+  if (!note) return null;
+
+  return (
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      onRequestClose={onClose}
+    >
+      <View style={styles.modalBackdrop}>
+        <Animated.View
+          entering={SlideInDown.duration(300)}
+          style={[
+            styles.settingsModalContainer,
+            {
+              backgroundColor: '#1A1625',
+            }
+          ]}>
+          <View style={styles.modalContent}>
+            {/* Header */}
+            <View style={styles.settingsHeader}>
+              <MaterialIcons name="settings" size={28} color={theme.colors.primary} />
+              <Text style={[styles.settingsTitle, { color: theme.colors.text }]}>Pengaturan</Text>
+            </View>
+            
+            <Text style={[styles.settingsSubtitle, { color: theme.colors.textSecondary }]}>{note.name}</Text>
+            
+            {/* Color Picker */}
+            <View style={styles.colorSection}>
+              <Text style={[styles.colorLabel, { color: theme.colors.text }]}>Warna Badge</Text>
+              <View style={styles.colorGrid}>
+                {availableColors.map((color) => (
+                  <TouchableOpacity
+                    key={color}
+                    onPress={() => onColorChange(color)}
+                    style={[
+                      styles.colorOption,
+                      { 
+                        backgroundColor: color,
+                        borderColor: color === note.color ? theme.colors.text : 'transparent',
+                        borderWidth: color === note.color ? 3 : 0,
+                      }
+                    ]}
+                    activeOpacity={0.7}
+                  >
+                    {color === note.color && (
+                      <MaterialIcons name="check" size={20} color="white" />
+                    )}
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+            
+            {/* Delete Button */}
+            <TouchableOpacity
+              onPress={onDelete}
+              style={[styles.deleteNoteButton, { backgroundColor: 'rgba(239, 68, 68, 0.15)', borderColor: theme.colors.error }]}
+              activeOpacity={0.7}
+            >
+              <MaterialIcons name="delete-outline" size={24} color={theme.colors.error} />
+              <Text style={[styles.deleteNoteText, { color: theme.colors.error }]}>Hapus Catatan</Text>
+            </TouchableOpacity>
+            
+            {/* Close Button */}
+            <TouchableOpacity
+              onPress={onClose}
+              style={[styles.modalButton, styles.cancelButton, { borderColor: 'rgba(255, 255, 255, 0.2)', backgroundColor: 'rgba(255, 255, 255, 0.05)' }]}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.modalButtonText, { color: theme.colors.text }]}>Tutup</Text>
+            </TouchableOpacity>
+          </View>
+        </Animated.View>
+      </View>
+    </Modal>
+  );
+});
+
 
 
 // ======================
@@ -564,10 +709,8 @@ const styles = StyleSheet.create({
     letterSpacing: -0.3,
     fontWeight: 'bold',
   },
-  statusDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+  settingsButton: {
+    padding: 4,
   },
   cardContent: {
     marginBottom: 16,
@@ -811,5 +954,69 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
+  },
+  settingsModalContainer: {
+    marginHorizontal: 20,
+    borderRadius: 32,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 20 },
+    shadowOpacity: 0.4,
+    shadowRadius: 30,
+    elevation: 20,
+  },
+  settingsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  settingsTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginLeft: 12,
+  },
+  settingsSubtitle: {
+    fontSize: 16,
+    textAlign: 'center',
+    marginBottom: 28,
+    fontWeight: '600',
+  },
+  colorSection: {
+    marginBottom: 24,
+  },
+  colorLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 12,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  colorGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  colorOption: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  deleteNoteButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 16,
+    marginBottom: 12,
+    borderWidth: 2,
+  },
+  deleteNoteText: {
+    fontSize: 16,
+    fontWeight: '700',
+    marginLeft: 8,
   },
 });

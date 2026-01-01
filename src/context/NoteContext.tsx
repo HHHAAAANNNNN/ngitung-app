@@ -1,6 +1,6 @@
 // app/context/NoteContext.tsx
 import { createContext, useContext, useEffect, useState } from 'react';
-import { createNote, deleteNote, getNotes, Note } from '../../src/utils/storage';
+import { createNote, deleteNote, getNotes, Note, updateNote } from '../../src/utils/storage';
 
 export type { Note };
 
@@ -8,6 +8,8 @@ type NoteContextType = {
   notes: Note[];
   addNote: (name: string) => Promise<void>;
   deleteNote: (id: string) => Promise<void>;
+  updateNote: (note: Note) => Promise<void>;
+  refreshNotes: () => Promise<void>;
 };
 
 const NoteContext = createContext<NoteContextType | null>(null);
@@ -15,11 +17,12 @@ const NoteContext = createContext<NoteContextType | null>(null);
 export function NoteProvider({ children }: { children: React.ReactNode }) {
   const [notes, setNotes] = useState<Note[]>([]);
 
+  const loadNotes = async () => {
+    const loadedNotes = await getNotes();
+    setNotes(loadedNotes);
+  };
+
   useEffect(() => {
-    const loadNotes = async () => {
-      const loadedNotes = await getNotes();
-      setNotes(loadedNotes);
-    };
     loadNotes();
   }, []);
 
@@ -33,8 +36,19 @@ export function NoteProvider({ children }: { children: React.ReactNode }) {
     setNotes(prev => prev.filter(note => note.id !== id));
   };
 
+  const updateNoteContext = async (note: Note) => {
+    await updateNote(note);
+    setNotes(prev => prev.map(n => n.id === note.id ? note : n));
+  };
+
   return (
-    <NoteContext.Provider value={{ notes, addNote, deleteNote: deleteNoteContext }}>
+    <NoteContext.Provider value={{ 
+      notes, 
+      addNote, 
+      deleteNote: deleteNoteContext,
+      updateNote: updateNoteContext,
+      refreshNotes: loadNotes
+    }}>
       {children}
     </NoteContext.Provider>
   );
