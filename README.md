@@ -34,30 +34,16 @@ A modern, beautiful mobile application for managing business costs and calculati
 
 <div align="center">
 
-### Home Screen & Note Management
+### Home Screen
 
 <table>
   <tr>
     <td align="center" width="33%">
       <img src="screenshots/1.jpeg" width="250" alt="Home Screen - Empty State"/>
       <br />
-      <sub><b>Empty State</b></sub>
+      <sub><b>Main Dashboard</b></sub>
       <br />
-      <sub>Welcome screen when no notes exist</sub>
-    </td>
-    <td align="center" width="33%">
-      <img src="screenshots/2.jpeg" width="250" alt="Create New Note"/>
-      <br />
-      <sub><b>Create Note</b></sub>
-      <br />
-      <sub>Add a new business calculation note</sub>
-    </td>
-    <td align="center" width="33%">
-      <img src="screenshots/3.jpeg" width="250" alt="Notes List"/>
-      <br />
-      <sub><b>Notes List</b></sub>
-      <br />
-      <sub>View all your business notes</sub>
+      <sub>Welcome screen to show all your notes!</sub>
     </td>
   </tr>
 </table>
@@ -67,18 +53,18 @@ A modern, beautiful mobile application for managing business costs and calculati
 <table>
   <tr>
     <td align="center" width="33%">
-      <img src="screenshots/4.jpeg" width="250" alt="Detail Page - Fixed Costs"/>
+      <img src="screenshots/8.jpeg" width="250" alt="Note Settings"/>
       <br />
-      <sub><b>Fixed Costs</b></sub>
+      <sub><b>Fixed Cost</b></sub>
       <br />
-      <sub>Add monthly overhead expenses</sub>
+      <sub>Something like tools and stuff</sub>
     </td>
     <td align="center" width="33%">
-      <img src="screenshots/5.jpeg" width="250" alt="Detail Page - Variable Costs"/>
+      <img src="screenshots/7.jpeg" width="250" alt="Results Page"/>
       <br />
-      <sub><b>Variable Costs</b></sub>
+      <sub><b>Variable Cost</b></sub>
       <br />
-      <sub>Manage per-unit material costs</sub>
+      <sub>Something like ingredients and such</sub>
     </td>
     <td align="center" width="33%">
       <img src="screenshots/6.jpeg" width="250" alt="Calculation Results"/>
@@ -95,18 +81,34 @@ A modern, beautiful mobile application for managing business costs and calculati
 <table>
   <tr>
     <td align="center" width="50%">
-      <img src="screenshots/7.jpeg" width="250" alt="Results Page"/>
+      <img src="screenshots/5.jpeg" width="250" alt="Detail Page - Variable Costs"/>
       <br />
-      <sub><b>Results Page</b></sub>
+      <sub><b>Optimal Selling Price</b></sub>
       <br />
-      <sub>Comprehensive breakdown of calculations</sub>
+      <sub>Highlight of the Calculations</sub>
     </td>
     <td align="center" width="50%">
-      <img src="screenshots/8.jpeg" width="250" alt="Note Settings"/>
+      <img src="screenshots/4.jpeg" width="250" alt="Detail Page - Fixed Costs"/>
       <br />
-      <sub><b>Note Settings</b></sub>
+      <sub><b>Cost Composition</b></sub>
       <br />
-      <sub>Customize colors and manage notes</sub>
+      <sub>Calculation Details</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="33%">
+      <img src="screenshots/3.jpeg" width="250" alt="Notes List"/>
+      <br />
+      <sub><b>Risk Simulation</b></sub>
+      <br />
+      <sub>Predict your risks!</sub>
+    </td>
+    <td align="center" width="33%">
+      <img src="screenshots/2.jpeg" width="250" alt="Create New Note"/>
+      <br />
+      <sub><b>Export to PDF</b></sub>
+      <br />
+      <sub>Share your Calculations</sub>
     </td>
   </tr>
 </table>
@@ -157,17 +159,11 @@ A modern, beautiful mobile application for managing business costs and calculati
 
 ### 1. Create a Business Note
 
-<img src="screenshots/2.jpeg" width="200" align="right" alt="Create Note"/>
-
 - Tap the **"+"** floating action button on the home screen
 - Enter a name for your business calculation (e.g., "Bakso Ayam", "Kue Brownies")
 - Tap **"Buat Catatan"** to create the note
 
-<br clear="right"/>
-
 ### 2. Add Fixed Costs
-
-<img src="screenshots/4.jpeg" width="200" align="right" alt="Fixed Costs"/>
 
 Fixed costs are monthly expenses that don't change with production volume:
 
@@ -178,11 +174,7 @@ Fixed costs are monthly expenses that don't change with production volume:
 - Enter monthly amount
 - Add as many fixed costs as needed
 
-<br clear="right"/>
-
 ### 3. Add Variable Costs
-
-<img src="screenshots/5.jpeg" width="200" align="right" alt="Variable Costs"/>
 
 Variable costs are per-unit expenses:
 
@@ -193,16 +185,12 @@ Variable costs are per-unit expenses:
 - Enter quantity per product
 - Add all your variable costs
 
-<br clear="right"/>
-
 ### 4. Set Sales Projection & Profit Margin
 
 - Enter **"Estimasi Penjualan"** (estimated monthly sales units)
 - Enter **"Margin Keuntungan"** (profit margin percentage, e.g., 30 for 30%)
 
 ### 5. Calculate & View Results
-
-<img src="screenshots/7.jpeg" width="200" align="right" alt="Results"/>
 
 - Tap **"Hitung"** to calculate
 - The app will automatically calculate:
@@ -211,17 +199,11 @@ Variable costs are per-unit expenses:
 - Tap **"Lihat Hasil Lengkap"** to see detailed breakdown
 - Export results as PDF or share them
 
-<br clear="right"/>
-
 ### 6. Customize & Manage Notes
-
-<img src="screenshots/8.jpeg" width="200" align="right" alt="Settings"/>
 
 - Tap the **three-dot menu** on any note card
 - Choose a custom color for the note badge
 - Delete notes you no longer need
-
-<br clear="right"/>
 
 ---
 
