@@ -1,6 +1,8 @@
 // app/context/NoteContext.tsx
 import { createContext, useContext, useEffect, useState } from 'react';
-import { getNotes, createNote, deleteNote, Note } from '../../src/utils/storage';
+import { createNote, deleteNote, getNotes, Note } from '../../src/utils/storage';
+
+export type { Note };
 
 type NoteContextType = {
   notes: Note[];

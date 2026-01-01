@@ -1,26 +1,41 @@
 // app/index.tsx
-import { useRouter } from 'expo-router';
-import { useState, useEffect } from 'react';
-import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, Dimensions } from 'react-native';
-import { useColorScheme } from 'react-native';
-import { PaperProvider, Card, Button, Portal, Text as PaperText, useTheme } from 'react-native-paper';
 import { MaterialIcons } from '@expo/vector-icons';
-import { useNotes } from '../src/context/NoteContext';
-import Animated, { FadeIn, FadeOut, SlideInDown, SlideOutUp } from 'react-native-reanimated';
-import { ReactNode } from 'react';
-import { Modal } from 'react-native-paper';
+import { useRouter } from 'expo-router';
+import React, { useCallback, useMemo, useState } from 'react';
+import {
+  Modal,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+  useColorScheme,
+  useWindowDimensions
+} from 'react-native';
+import Animated, { FadeIn, SlideInDown, SlideOutUp } from 'react-native-reanimated';
+import { Note, useNotes } from '../src/context/NoteContext';
 
+type ColorSchemeName = 'light' | 'dark' | null | undefined;
 
-// Gradient background yang tidak mengganggu keterbacaan
-const GradientBackground = ({ children }: { children: ReactNode }) => {
-  const { colors } = useTheme();
+// ======================
+// SUB-COMPONENTS
+// ======================
+
+const GradientBackground = ({ children }: { children: React.ReactNode }) => {
   return (
-    <View style={[styles.background, { backgroundColor: colors.background }]}>
-      <View style={styles.gradientOverlay} />
+    <View style={styles.background}>
+      <View style={styles.gradientTopLeft} />
+      <View style={styles.gradientBottomRight} />
       {children}
     </View>
   );
 };
+
+// ======================
+// MAIN COMPONENT
+// ======================
 
 export default function MainPage() {
   const colorScheme = useColorScheme();
@@ -29,341 +44,460 @@ export default function MainPage() {
   const [modalVisible, setModalVisible] = useState(false);
   const [newNoteName, setNewNoteName] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  const [filteredNotes, setFilteredNotes] = useState(notes);
-  const theme = useTheme();
+  const { width } = useWindowDimensions();
 
-  useEffect(() => {
-    setFilteredNotes(
-      notes.filter(note => 
-        note.name.toLowerCase().includes(searchQuery.toLowerCase())
-      )
+  // Dark mode theme
+  const theme = {
+    colors: {
+      primary: '#A78BFA',
+      secondary: '#34D399',
+      accent: '#F472B6',
+      surface: 'rgba(30, 27, 75, 0.7)',
+      background: '#0F0A1F',
+      onBackground: '#F3F4F6',
+      onSurface: '#E5E7EB',
+      outline: '#6B7280',
+      text: '#F9FAFB',
+      textSecondary: '#9CA3AF',
+      glass: 'rgba(255, 255, 255, 0.1)',
+      glassBorder: 'rgba(255, 255, 255, 0.2)',
+    }
+  };
+
+  // Memoized filtered notes for performance
+  const filteredNotes = useMemo(() => {
+    return notes.filter(note => 
+      note.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
   }, [searchQuery, notes]);
 
-  const handleAddNote = () => {
+  // Note color generator
+  const getNoteColor = useCallback((index: number): string => {
+    const colors = [
+      '#A78BFA',
+      '#34D399',
+      '#F472B6',
+      '#60A5FA',
+      '#FBBF24',
+      '#FB923C',
+      '#A855F7',
+      '#EC4899',
+    ];
+    return colors[index % colors.length];
+  }, [theme]);
+
+  // Handlers
+  const handleAddNote = useCallback(() => {
     setModalVisible(true);
     setNewNoteName('');
-  };
+  }, []);
 
-  const handleSaveNote = () => {
+  const handleSaveNote = useCallback(() => {
     if (newNoteName.trim()) {
       addNote(newNoteName.trim());
       setModalVisible(false);
       setNewNoteName('');
     }
-  };
+  }, [newNoteName, addNote]);
 
-  const getNoteColor = (index: number): string => {
-  const colors = [
-    '#BB86FC',
-    '#03DAC6',
-    '#CF6679',
-    '#4CAF50',
-    '#FF9800',
-    '#2196F3',
-    '#9C27B0',
-    '#E91E63',
-  ];
-  return colors[index % colors.length];
-};
+  const handleCloseModal = useCallback(() => {
+    setModalVisible(false);
+    setNewNoteName('');
+  }, []);
 
-  const renderEmptyState = () => (
-    <Animated.View entering={FadeIn.duration(500)} style={styles.emptyState}>
+  const handleClearSearch = useCallback(() => {
+    setSearchQuery('');
+  }, []);
+
+  const handleNavigateToDetail = useCallback((id: string) => {
+    router.push({
+      pathname: '/(tabs)/detail/[id]',
+      params: { id }
+    });
+  }, [router]);
+
+  // Empty state component
+  const EmptyState = useMemo(() => (
+    <Animated.View 
+      entering={FadeIn.duration(500)} 
+      style={[styles.emptyState, { width }]}
+    >
       <MaterialIcons 
         name="calculate" 
         size={64} 
         color={theme.colors.primary} 
         style={styles.emptyIcon} 
       />
-      <Text style={[styles.emptyTitle, { color: theme.colors.onBackground }]}>
-        Belum Ada Catatan Perhitungan
-      </Text>
-      <Text style={[styles.emptySubtitle, { color: theme.colors.outline }]}>
-        Mulai dengan menambahkan catatan usaha baru Anda
-      </Text>
+      <Text style={[styles.emptyTitle, { color: theme.colors.onBackground }]}>Belum Ada Catatan Perhitungan</Text>
+      <Text style={[styles.emptySubtitle, { color: theme.colors.outline }]}>Mulai dengan menambahkan catatan usaha baru Anda</Text>
       <TouchableOpacity 
-        style={[styles.primaryButton, { backgroundColor: theme.colors.primary }]}
+        style={styles.primaryButton}
         onPress={handleAddNote}
+        activeOpacity={0.85}
       >
         <MaterialIcons name="add" size={24} color="white" style={styles.buttonIcon} />
         <Text style={styles.buttonText}>Buat Catatan Baru</Text>
       </TouchableOpacity>
     </Animated.View>
-  );
+  ), [width, theme, handleAddNote]);
+
+  // ======================
+  // RENDERING
+  // ======================
 
   return (
-    <PaperProvider theme={{
-      ...theme,
-      colors: {
-        ...theme.colors,
-        primary: '#BB86FC',
-        secondary: '#03DAC6',
-        surface: colorScheme === 'dark' ? '#2D2B3D' : '#FFFFFF',
-        background: colorScheme === 'dark' ? '#12111D' : '#F8FAFF',
-        onBackground: colorScheme === 'dark' ? '#E0E0E0' : '#1F1F1F',
-        onSurface: colorScheme === 'dark' ? '#E0E0E0' : '#1F1F1F',
-        outline: colorScheme === 'dark' ? '#888888' : '#646464',
-      }
-    }}>
-      <GradientBackground>
-        <View style={styles.header}>
-          <Text style={[styles.title, { color: theme.colors.onBackground }]}>NGITUNG</Text>
-          <Text style={[styles.subtitle, { color: theme.colors.outline }]}>
-            Catatan Usaha Anda
-          </Text>
-          
-          <View style={[
-            styles.searchContainer,
-            { 
-              backgroundColor: colorScheme === 'dark' ? 'rgba(45, 43, 61, 0.8)' : '#FFFFFF',
-              borderColor: colorScheme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : '#E2E8F0'
-            }
-          ]}>
-            <MaterialIcons name="search" size={20} color={theme.colors.outline} />
-            <TextInput
-              style={[
-                styles.searchInput,
-                { 
-                  color: theme.colors.onSurface,
-                  backgroundColor: 'transparent'
-                }
-              ]}
-              placeholder="Cari usaha..."
-              placeholderTextColor={theme.colors.outline}
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              selectionColor={theme.colors.primary}
-            />
-            {searchQuery ? (
-              <TouchableOpacity onPress={() => setSearchQuery('')}>
-                <MaterialIcons name="close" size={20} color={theme.colors.outline} />
-              </TouchableOpacity>
-            ) : null}
-          </View>
+    <GradientBackground>
+      <View style={styles.header}>
+        <Text style={[styles.title, { color: theme.colors.primary }]}>NGITUNG</Text>
+        <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>Kelola Usaha Dengan Mudah</Text>
+        
+        {/* Search Bar dengan Glass Effect */}
+        <View style={[
+          styles.searchContainer, 
+          { 
+            backgroundColor: theme.colors.glass,
+            borderColor: theme.colors.glassBorder 
+          }
+        ]}> 
+          <MaterialIcons name="search" size={22} color={theme.colors.primary} />
+          <TextInput
+            style={[styles.searchInput, { color: theme.colors.text }]}
+            placeholder="Cari catatan usaha..."
+            placeholderTextColor={theme.colors.outline}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            selectionColor={theme.colors.primary}
+            autoCapitalize="none"
+            autoComplete="off"
+            keyboardAppearance="dark"
+          />
+          {searchQuery ? (
+            <TouchableOpacity 
+              onPress={handleClearSearch} 
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <MaterialIcons name="close" size={22} color={theme.colors.outline} />
+            </TouchableOpacity>
+          ) : null}
         </View>
+      </View>
 
-        <ScrollView 
-          style={styles.notesList} 
-          contentContainerStyle={styles.scrollViewContent}
-          showsVerticalScrollIndicator={false}
-        >
-          {filteredNotes.length === 0 ? (
-            renderEmptyState()
-          ) : (
-            <>
-              {filteredNotes.map((note, index) => (
-                <Animated.View 
-                  key={note.id} 
-                  entering={SlideInDown.delay(index * 100).duration(300)}
-                  exiting={SlideOutUp.duration(200)}
-                  style={styles.cardContainer}
-                >
-                  <TouchableOpacity
-                    onPress={() => router.push({
-                      pathname: '/(tabs)/detail/[id]',
-                      params: { id: note.id }
-                    })}
-                    activeOpacity={0.95}
-                  >
-                    <Card style={[
-                      styles.noteCard,
-                      { 
-                        backgroundColor: colorScheme === 'dark' ? 'rgba(45, 43, 61, 0.8)' : '#FFFFFF',
-                        borderColor: getNoteColor(index),
-                        shadowColor: getNoteColor(index),
-                      }
-                    ]}>
-                      <View style={styles.cardHeader}>
-                        <View style={[
-                          styles.colorBadge,
-                          { backgroundColor: getNoteColor(index) }
-                        ]} />
-                        <Text style={[styles.noteName, { color: theme.colors.onSurface }]} numberOfLines={1}>
-                          {note.name}
-                        </Text>
-                        <TouchableOpacity style={styles.moreButton} disabled>
-                          <MaterialIcons 
-                            name="more-vert" 
-                            size={24} 
-                            color={theme.colors.outline} 
-                          />
-                        </TouchableOpacity>
-                      </View>
-                      
-                      <View style={styles.cardContent}>
-                        <View style={styles.priceContainer}>
-                          <Text style={[styles.noteLabel, { color: theme.colors.outline }]}>
-                            Harga Jual:
-                          </Text>
-                          <Text style={[styles.notePrice, { color: '#BB86FC' }]}>
-                            {note.price || 'Rp 0'}
-                          </Text>
-                        </View>
-                        
-                        <View style={styles.bppContainer}>
-                          <Text style={[styles.noteLabel, { color: theme.colors.outline }]}>
-                            BPP:
-                          </Text>
-                          <Text style={[styles.noteBpp, { color: '#03DAC6' }]}>
-                            {note.bpp || 'Rp 0'}
-                          </Text>
-                        </View>
-                      </View>
-                      
-                      <View style={styles.cardFooter}>
-                        <View style={styles.dateContainer}>
-                          <MaterialIcons 
-                            name="update" 
-                            size={16} 
-                            color={theme.colors.outline} 
-                          />
-                          <Text style={[styles.noteUpdated, { color: theme.colors.outline }]}>
-                            {new Date(note.updatedAt).toLocaleDateString('id-ID', {
-                              day: '2-digit',
-                              month: 'short',
-                              year: 'numeric'
-                            })}
-                          </Text>
-                        </View>
-                        <View style={styles.profitBadge}>
-                          <MaterialIcons 
-                            name="trending-up" 
-                            size={14} 
-                            color="#BB86FC" 
-                          />
-                          <Text style={[styles.profitText, { color: '#BB86FC' }]}>
-                            30%
-                          </Text>
-                        </View>
-                      </View>
-                    </Card>
-                  </TouchableOpacity>
-                </Animated.View>
-              ))}
-            </>
-          )}
-        </ScrollView>
-
-        <Animated.View entering={SlideInDown.delay(300)} style={styles.fabContainer}>
-          <TouchableOpacity 
-            style={[
-              styles.fab,
-              {
-                backgroundColor: theme.colors.primary,
-                shadowColor: theme.colors.primary,
-              }
-            ]} 
-            onPress={handleAddNote}
-            activeOpacity={0.85}
-          >
-            <MaterialIcons name="add" size={32} color="white" />
-          </TouchableOpacity>
-        </Animated.View>
-
-        <Portal>
-          <Modal 
-            visible={modalVisible} 
-            onDismiss={() => setModalVisible(false)}
-            contentContainerStyle={[
-              styles.modalContainer,
-              { 
-                backgroundColor: colorScheme === 'dark' ? '#2D2B3D' : '#FFFFFF',
-                borderColor: colorScheme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : '#E2E8F0'
-              }
-            ]}
-          >
-            <View style={styles.modalHeader}>
-              <Text style={[styles.modalTitle, { color: theme.colors.onSurface }]}>
-                Tambah Catatan Baru
-              </Text>
-              <TouchableOpacity onPress={() => setModalVisible(false)}>
-                <MaterialIcons name="close" size={28} color={theme.colors.outline} />
-              </TouchableOpacity>
-            </View>
-            
-            <TextInput
-              style={[
-                styles.modalInput,
-                { 
-                  backgroundColor: colorScheme === 'dark' ? 'rgba(45, 43, 61, 0.8)' : '#F8FAFF',
-                  color: theme.colors.onSurface,
-                  borderColor: colorScheme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : '#E2E8F0'
-                }
-              ]}
-              placeholder="Nama usaha..."
-              placeholderTextColor={theme.colors.outline}
-              value={newNoteName}
-              onChangeText={setNewNoteName}
-              autoFocus
-              returnKeyType="done"
-              onSubmitEditing={handleSaveNote}
-              selectionColor={theme.colors.primary}
+      <ScrollView 
+        style={styles.notesList} 
+        contentContainerStyle={styles.scrollViewContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {filteredNotes.length === 0 ? (
+          EmptyState
+        ) : (
+          filteredNotes.map((note, index) => (
+            <NoteCard 
+              key={note.id}
+              note={note}
+              index={index}
+              color={getNoteColor(index)}
+              onPress={() => handleNavigateToDetail(note.id)}
+              theme={theme}
             />
-            
-            <Text style={[styles.modalHint, { color: theme.colors.outline }]}>
-              Contoh: Bakso Ayam, Jasa Desain, Toko Online
-            </Text>
-            
-            <View style={styles.modalActions}>
-              <Button 
-                mode="outlined" 
-                onPress={() => setModalVisible(false)}
-                textColor={theme.colors.primary}
-                style={styles.modalButton}
-                labelStyle={{ fontSize: 16 }}
-                contentStyle={{ height: 50 }}
-              >
-                Batal
-              </Button>
-              <Button 
-                mode="contained" 
-                onPress={handleSaveNote}
-                buttonColor={theme.colors.primary}
-                textColor="white"
-                style={styles.modalButton}
-                labelStyle={{ fontSize: 16 }}
-                contentStyle={{ height: 50 }}
-                disabled={!newNoteName.trim()}
-              >
-                Buat Catatan
-              </Button>
-            </View>
-          </Modal>
-        </Portal>
-      </GradientBackground>
-    </PaperProvider>
+          ))
+        )}
+      </ScrollView>
+
+      <Animated.View entering={SlideInDown.delay(300)} style={styles.fabContainer}>
+        <TouchableOpacity 
+          style={[styles.fab, { backgroundColor: theme.colors.primary }]}
+          onPress={handleAddNote}
+          activeOpacity={0.85}
+          accessibilityLabel="Tambah catatan baru"
+          accessibilityRole="button"
+        >
+          <MaterialIcons name="add" size={32} color="white" />
+        </TouchableOpacity>
+      </Animated.View>
+
+      <AddNoteModal
+        visible={modalVisible}
+        onClose={handleCloseModal}
+        onSave={handleSaveNote}
+        noteName={newNoteName}
+        onNoteNameChange={setNewNoteName}
+        colorScheme={colorScheme}
+        theme={theme}
+      />
+    </GradientBackground>
   );
 }
 
-const { width } = Dimensions.get('window');
-const cardWidth = width - 40;
+// ======================
+// SUB-COMPONENTS DEFINITIONS
+// ======================
+
+interface NoteCardProps {
+  note: Note;
+  index: number;
+  color: string;
+  onPress: () => void;
+  theme: any;
+}
+
+const NoteCard = React.memo(({ note, color, onPress, theme, index }: NoteCardProps) => {
+  return (
+    <Animated.View 
+      entering={SlideInDown.delay(100 * Math.min(10, index)).duration(300)}
+      exiting={SlideOutUp.duration(200)}
+      style={styles.cardContainer}
+    >
+      <TouchableOpacity
+        onPress={onPress}
+        activeOpacity={0.9}
+        style={styles.cardTouchable}
+      >
+        <View style={[
+          styles.noteCard,
+          { 
+            backgroundColor: theme.colors.glass,
+            borderColor: theme.colors.glassBorder,
+          }
+        ]}>
+          <View style={styles.cardHeader}>
+            <View style={[styles.colorBadge, { backgroundColor: color }]} />
+            <Text style={[styles.noteName, { color: theme.colors.text }]} numberOfLines={1}>
+              {note.name}
+            </Text>
+            <View style={[styles.statusDot, { backgroundColor: theme.colors.secondary }]} />
+          </View>
+          
+          <View style={styles.cardContent}>
+            <View style={styles.priceRow}>
+              <View style={styles.priceItem}>
+                <MaterialIcons name="attach-money" size={18} color={theme.colors.primary} />
+                <View style={styles.priceInfo}>
+                  <Text style={[styles.priceLabel, { color: theme.colors.textSecondary }]}>Harga Jual</Text>
+                  <Text style={[styles.priceValue, { color: theme.colors.text }]}>{note.price || 'Rp 0'}</Text>
+                </View>
+              </View>
+            </View>
+            
+            <View style={styles.divider} />
+            
+            <View style={styles.priceRow}>
+              <View style={styles.priceItem}>
+                <MaterialIcons name="receipt" size={18} color={theme.colors.secondary} />
+                <View style={styles.priceInfo}>
+                  <Text style={[styles.priceLabel, { color: theme.colors.textSecondary }]}>BPP</Text>
+                  <Text style={[styles.priceValue, { color: theme.colors.text }]}>{note.bpp || 'Rp 0'}</Text>
+                </View>
+              </View>
+            </View>
+          </View>
+          
+          <View style={styles.cardFooter}>
+            <View style={styles.dateContainer}>
+              <MaterialIcons 
+                name="access-time" 
+                size={14} 
+                color={theme.colors.outline} 
+              />
+              <Text style={[styles.noteUpdated, { color: theme.colors.textSecondary }]}> 
+                {new Date(note.updatedAt).toLocaleDateString('id-ID', {
+                  day: 'numeric',
+                  month: 'short',
+                })}
+              </Text>
+            </View>
+            <View style={[styles.profitBadge, { backgroundColor: 'rgba(52, 211, 153, 0.15)' }]}>
+              <MaterialIcons 
+                name="trending-up" 
+                size={14} 
+                color={theme.colors.secondary} 
+              />
+              <Text style={[styles.profitText, { color: theme.colors.secondary }]}>Profit</Text>
+            </View>
+          </View>
+        </View>
+      </TouchableOpacity>
+    </Animated.View>
+  );
+});
+
+interface AddNoteModalProps {
+  visible: boolean;
+  onClose: () => void;
+  onSave: () => void;
+  noteName: string;
+  onNoteNameChange: (text: string) => void;
+  colorScheme: ColorSchemeName;
+  theme: any;
+}
+
+const AddNoteModal = React.memo(({ 
+  visible, 
+  onClose, 
+  onSave, 
+  noteName, 
+  onNoteNameChange,
+  colorScheme,
+  theme
+}: AddNoteModalProps) => {
+  const [isFocused, setIsFocused] = React.useState(false);
+  
+  return (
+    <Modal 
+      visible={visible} 
+      transparent
+      animationType="fade"
+      onRequestClose={onClose}
+    >
+      <View style={styles.modalBackdrop}>
+        <Animated.View 
+          entering={SlideInDown.duration(300)}
+          style={[
+            styles.modalContainer,
+            { 
+              backgroundColor: '#1A1625',
+            }
+          ]}>
+          {/* Decorative gradient circles */}
+          <View style={[styles.modalGradient1, { backgroundColor: 'rgba(167, 139, 250, 0.3)' }]} />
+          <View style={[styles.modalGradient2, { backgroundColor: 'rgba(244, 114, 182, 0.2)' }]} />
+          
+          <View style={styles.modalContent}>
+            {/* Header Icon */}
+            <View style={[styles.modalIconContainer, { backgroundColor: 'rgba(167, 139, 250, 0.15)' }]}>
+              <MaterialIcons name="note-add" size={32} color={theme.colors.primary} />
+            </View>
+            
+            <Text style={[styles.modalTitle, { color: theme.colors.text }]}>Buat Catatan Baru</Text>
+            <Text style={[styles.modalSubtitle, { color: theme.colors.textSecondary }]}>Mulai catat usaha Anda dengan nama yang mudah diingat</Text>
+            
+            {/* Input Container */}
+            <View style={styles.inputWrapper}>
+              <Text style={[styles.inputLabel, { color: theme.colors.textSecondary }]}>Nama Usaha</Text>
+              <View style={[
+                styles.inputContainer,
+                { 
+                  borderColor: isFocused ? theme.colors.primary : 'rgba(255, 255, 255, 0.15)',
+                  backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                }
+              ]}>
+                <MaterialIcons 
+                  name="business-center" 
+                  size={20} 
+                  color={isFocused ? theme.colors.primary : theme.colors.outline} 
+                  style={styles.inputIcon}
+                />
+                <TextInput
+                  style={[
+                    styles.modalInput,
+                    { 
+                      color: theme.colors.text,
+                    }
+                  ]}
+                  placeholder="Contoh: Bakso Ayam, ..."
+                  placeholderTextColor={theme.colors.outline}
+                  value={noteName}
+                  onChangeText={onNoteNameChange}
+                  onFocus={() => setIsFocused(true)}
+                  onBlur={() => setIsFocused(false)}
+                  autoFocus
+                  returnKeyType="done"
+                  onSubmitEditing={onSave}
+                  selectionColor={theme.colors.primary}
+                  autoCapitalize="words"
+                  autoComplete="name"
+                  keyboardAppearance="dark"
+                />
+              </View>
+            </View>
+            
+            {/* Action Buttons */}
+            <View style={styles.modalActions}>
+              <TouchableOpacity 
+                onPress={onClose}
+                style={[
+                  styles.modalButton, 
+                  styles.cancelButton,
+                  { 
+                    borderColor: 'rgba(255, 255, 255, 0.2)',
+                    backgroundColor: 'rgba(255, 255, 255, 0.05)' 
+                  }
+                ]}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.modalButtonText, { color: theme.colors.text }]}>Batal</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                onPress={onSave}
+                style={[
+                  styles.modalButton, 
+                  styles.saveButton,
+                  { 
+                    opacity: !noteName.trim() ? 0.5 : 1 
+                  }
+                ]}
+                activeOpacity={0.8}
+                disabled={!noteName.trim()}
+              >
+                <View style={styles.saveButtonGradient} />
+                <Text style={[styles.modalButtonText, { color: 'white' }]}>Buat Catatan</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Animated.View>
+      </View>
+    </Modal>
+  );
+});
+
+
+
+// ======================
+// STYLES
+// ======================
 
 const styles = StyleSheet.create({
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   background: {
     flex: 1,
+    backgroundColor: '#0F0A1F',
   },
-  gradientOverlay: {
+  gradientTopLeft: {
     position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 120,
-    backgroundColor: 'rgba(187, 134, 252, 0.1)',
+    top: -100,
+    left: -100,
+    width: 300,
+    height: 300,
+    backgroundColor: 'rgba(167, 139, 250, 0.15)',
+    borderRadius: 200,
+  },
+  gradientBottomRight: {
+    position: 'absolute',
+    bottom: -150,
+    right: -100,
+    width: 350,
+    height: 350,
+    backgroundColor: 'rgba(244, 114, 182, 0.12)',
+    borderRadius: 200,
   },
   header: {
     paddingHorizontal: 20,
-    paddingTop: 10,
+    paddingTop: Platform.OS === 'android' ? 40 : 60,
     paddingBottom: 20,
   },
   title: {
-    fontSize: 34,
-    fontWeight: '800',
+    fontSize: 36,
     textAlign: 'center',
     marginBottom: 4,
     letterSpacing: -0.5,
+    fontWeight: 'bold',
   },
   subtitle: {
-    fontSize: 17,
+    fontSize: 14,
     textAlign: 'center',
     marginBottom: 20,
     fontWeight: '500',
@@ -376,6 +510,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderWidth: 1,
     marginBottom: 24,
+    backdropFilter: 'blur(10px)',
   },
   searchInput: {
     flex: 1,
@@ -383,6 +518,7 @@ const styles = StyleSheet.create({
     padding: 0,
     marginLeft: 8,
     fontWeight: '500',
+    height: 24,
   },
   notesList: {
     flex: 1,
@@ -394,11 +530,15 @@ const styles = StyleSheet.create({
   cardContainer: {
     marginBottom: 18,
   },
+  cardTouchable: {
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
   noteCard: {
     borderRadius: 20,
     borderWidth: 1.5,
     padding: 18,
-    shadowColor: '#000',
+    backdropFilter: 'blur(10px)',
     shadowOffset: {
       width: 0,
       height: 6,
@@ -420,47 +560,44 @@ const styles = StyleSheet.create({
   },
   noteName: {
     flex: 1,
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: 18,
     letterSpacing: -0.3,
+    fontWeight: 'bold',
   },
-  moreButton: {
-    padding: 4,
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
   },
   cardContent: {
     marginBottom: 16,
   },
-  priceContainer: {
+  priceRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 10,
+    alignItems: 'center',
   },
-  bppContainer: {
+  priceItem: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.08)',
-    paddingTop: 12,
+    alignItems: 'center',
+    flex: 1,
   },
-  noteLabel: {
-    fontSize: 16,
+  priceInfo: {
+    marginLeft: 10,
+  },
+  priceLabel: {
+    fontSize: 12,
     fontWeight: '500',
+    marginBottom: 2,
   },
-  notePrice: {
-    fontSize: 24,
-    fontWeight: '800',
-    letterSpacing: -0.5,
-    textAlign: 'right',
-    textShadowColor: 'rgba(187, 134, 252, 0.3)',
-    textShadowRadius: 1,
-  },
-  noteBpp: {
-    fontSize: 22,
+  priceValue: {
+    fontSize: 16,
     fontWeight: '700',
-    letterSpacing: -0.4,
-    textAlign: 'right',
-    textShadowColor: 'rgba(3, 218, 198, 0.3)',
-    textShadowRadius: 1,
+    letterSpacing: -0.3,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    marginVertical: 12,
   },
   cardFooter: {
     flexDirection: 'row',
@@ -468,34 +605,38 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: 14,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.08)',
+    borderTopColor: 'rgba(255, 255, 255, 0.1)',
   },
   dateContainer: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   noteUpdated: {
-    fontSize: 15,
+    fontSize: 12,
     marginLeft: 6,
     fontWeight: '500',
   },
   profitBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(187, 134, 252, 0.15)',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 14,
   },
   profitText: {
-    fontSize: 16,
-    fontWeight: '700',
+    fontSize: 12,
+    fontWeight: 'bold',
     marginLeft: 4,
   },
   fabContainer: {
     position: 'absolute',
     right: 24,
     bottom: 32,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
   },
   fab: {
     width: 68,
@@ -503,51 +644,130 @@ const styles = StyleSheet.create({
     borderRadius: 34,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowOffset: {
-      width: 0,
-      height: 8,
-    },
-    shadowOpacity: 0.3,
+    shadowColor: '#A78BFA',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.4,
     shadowRadius: 12,
-    elevation: 6,
+    elevation: 8,
   },
   modalContainer: {
-    margin: 20,
-    borderRadius: 24,
-    padding: 24,
-    borderWidth: 1,
+    marginHorizontal: 20,
+    borderRadius: 32,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 20 },
+    shadowOpacity: 0.4,
+    shadowRadius: 30,
+    elevation: 20,
   },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  modalGradient1: {
+    position: 'absolute',
+    top: -50,
+    right: -50,
+    width: 150,
+    height: 150,
+    borderRadius: 100,
+  },
+  modalGradient2: {
+    position: 'absolute',
+    bottom: -60,
+    left: -60,
+    width: 180,
+    height: 180,
+    borderRadius: 100,
+  },
+  modalContent: {
+    padding: 28,
+    position: 'relative',
+    zIndex: 1,
+  },
+  modalIconContainer: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 24,
+    alignSelf: 'center',
+    marginBottom: 20,
   },
   modalTitle: {
-    fontSize: 22,
-    fontWeight: '700',
+    fontSize: 24,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 8,
+    letterSpacing: -0.5,
+  },
+  modalSubtitle: {
+    fontSize: 14,
+    textAlign: 'center',
+    marginBottom: 32,
+    lineHeight: 20,
+    paddingHorizontal: 10,
+  },
+  inputWrapper: {
+    marginBottom: 32,
+  },
+  inputLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    marginBottom: 10,
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 16,
+    borderWidth: 2,
+    paddingHorizontal: 16,
+    paddingVertical: 4,
+  },
+  inputIcon: {
+    marginRight: 12,
   },
   modalInput: {
-    borderWidth: 1,
-    borderRadius: 16,
-    padding: 18,
-    fontSize: 18,
-    marginBottom: 16,
+    flex: 1,
+    fontSize: 17,
+    paddingVertical: 14,
     fontWeight: '600',
-  },
-  modalHint: {
-    fontSize: 15,
-    marginBottom: 28,
-    textAlign: 'center',
-    lineHeight: 22,
   },
   modalActions: {
     flexDirection: 'row',
-    gap: 16,
+    gap: 12,
   },
   modalButton: {
     flex: 1,
-    borderRadius: 14,
+    paddingVertical: 16,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  cancelButton: {
+    borderWidth: 2,
+  },
+  saveButton: {
+    backgroundColor: '#A78BFA',
+    shadowColor: '#A78BFA',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  saveButtonGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(244, 114, 182, 0.2)',
+  },
+  modalButtonText: {
+    fontSize: 16,
+    fontWeight: '700',
+    letterSpacing: 0.3,
   },
   emptyState: {
     alignItems: 'center',
@@ -559,13 +779,13 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   emptyTitle: {
-    fontSize: 22,
-    fontWeight: '700',
+    fontSize: 20,
     textAlign: 'center',
     marginBottom: 10,
+    fontWeight: 'bold',
   },
   emptySubtitle: {
-    fontSize: 17,
+    fontSize: 15,
     textAlign: 'center',
     marginBottom: 36,
     lineHeight: 24,
@@ -577,13 +797,19 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 26,
     borderRadius: 16,
+    backgroundColor: '#A78BFA',
+    shadowColor: '#A78BFA',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
   buttonIcon: {
     marginRight: 10,
   },
   buttonText: {
     color: 'white',
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
   },
 });
