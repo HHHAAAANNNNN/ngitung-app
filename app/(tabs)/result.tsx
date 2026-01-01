@@ -6,6 +6,7 @@ import * as Sharing from 'expo-sharing';
 import { useState } from 'react';
 import { Alert, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown, SlideInRight } from 'react-native-reanimated';
+import Svg, { Circle } from 'react-native-svg';
 import { useNotes } from '../../src/context/NoteContext';
 
 export default function ResultPage() {
@@ -30,18 +31,26 @@ export default function ResultPage() {
     }
   };
   
-  const note = notes.find(n => n.id === id);
+  // If no ID in params, try to use the first note with calculation data
+  let note = id ? notes.find(n => n.id === id) : null;
+  
+  // If still no note, find the first note that has calculation data
+  if (!note) {
+    note = notes.find(n => n.profitMargin && n.estimatedSales);
+  }
+  
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [simulationMode, setSimulationMode] = useState<'material' | 'sales' | null>(null);
   
-  if (!note) {
+  // Check if we have a note with calculation data
+  if (!note || !note.profitMargin || !note.estimatedSales) {
     return (
       <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
         <View style={styles.errorContainer}>
           <MaterialIcons name="error-outline" size={64} color={theme.colors.error} />
-          <Text style={[styles.errorTitle, { color: theme.colors.text }]}>Data Tidak Ditemukan</Text>
+          <Text style={[styles.errorTitle, { color: theme.colors.text }]}>Belum Ada Data Perhitungan</Text>
           <Text style={[styles.errorMessage, { color: theme.colors.textSecondary }]}>
-            Silakan isi data perhitungan terlebih dahulu
+            Silakan buat catatan baru dan isi data perhitungan terlebih dahulu
           </Text>
         </View>
       </View>
@@ -135,25 +144,60 @@ export default function ResultPage() {
   
   // Export to PDF
   const exportToPDF = async () => {
+    // Prepare simulation results
+    const materialSimulation = simulateMaterialIncrease(20);
+    const salesSimulation = simulateSalesDecrease(30);
+    
     const htmlContent = `
       <!DOCTYPE html>
       <html>
       <head>
         <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Hasil NGITUNG - ${note.name}</title>
         <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
           body { font-family: Arial, sans-serif; padding: 40px; background: #f5f5f5; }
-          .container { background: white; padding: 30px; border-radius: 10px; }
+          .container { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
           .header { text-align: center; margin-bottom: 30px; border-bottom: 3px solid #A78BFA; padding-bottom: 20px; }
           .header h1 { color: #A78BFA; margin: 0; font-size: 28px; }
           .header p { color: #666; margin: 5px 0; }
-          .section { margin: 25px 0; }
+          .section { margin: 25px 0; page-break-inside: avoid; }
           .section-title { color: #333; font-size: 18px; font-weight: bold; margin-bottom: 15px; border-left: 4px solid #A78BFA; padding-left: 10px; }
           .result-box { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 10px 0; }
           .result-main { font-size: 32px; font-weight: bold; color: ${isProfit ? '#10B981' : '#EF4444'}; text-align: center; margin: 20px 0; }
           .result-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; }
           .result-label { color: #666; }
           .result-value { font-weight: bold; color: #333; }
+          
+          /* Pie Chart */
+          .pie-chart-container { text-align: center; margin: 30px 0; }
+          .pie-chart { width: 200px; height: 200px; margin: 0 auto; position: relative; border-radius: 50%; background: conic-gradient(
+            #A78BFA 0deg ${fixedCostPercent * 3.6}deg,
+            #34D399 ${fixedCostPercent * 3.6}deg 360deg
+          ); }
+          .pie-legend { display: flex; justify-content: center; gap: 30px; margin-top: 20px; }
+          .legend-item { display: flex; align-items: center; gap: 8px; }
+          .legend-color { width: 20px; height: 20px; border-radius: 4px; }
+          .legend-fixed { background: #A78BFA; }
+          .legend-variable { background: #34D399; }
+          
+          /* Cost Details */
+          .cost-detail { background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0; }
+          .cost-detail h4 { color: #333; margin-bottom: 10px; font-size: 16px; }
+          .cost-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e0e0e0; }
+          .cost-item:last-child { border-bottom: none; }
+          .cost-total { margin-top: 12px; padding-top: 12px; border-top: 2px solid #333; font-weight: bold; }
+          
+          /* Simulation */
+          .simulation-box { background: #fff3cd; padding: 15px; border-left: 4px solid #F59E0B; border-radius: 8px; margin: 10px 0; }
+          .simulation-title { font-weight: bold; color: #856404; margin-bottom: 8px; }
+          .simulation-result { color: #666; margin: 5px 0; }
+          
+          /* Recommendation */
           .recommendation { background: #e8f4f8; padding: 15px; border-radius: 8px; margin: 10px 0; border-left: 4px solid #34D399; }
+          .recommendation strong { color: #0c4a6e; display: block; margin-bottom: 5px; }
+          
           .footer { text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; color: #999; font-size: 12px; }
         </style>
       </head>
@@ -194,14 +238,74 @@ export default function ResultPage() {
           
           <div class="section">
             <div class="section-title">💰 Komposisi Biaya</div>
-            <div class="result-box">
-              <div class="result-row">
-                <span class="result-label">Biaya Tetap (${fixedCostPercent.toFixed(1)}%)</span>
-                <span class="result-value">Rp ${totalFixedCost.toLocaleString('id-ID')}</span>
+            
+            <div class="pie-chart-container">
+              <div class="pie-chart"></div>
+              <div class="pie-legend">
+                <div class="legend-item">
+                  <div class="legend-color legend-fixed"></div>
+                  <span>Biaya Tetap (${fixedCostPercent.toFixed(1)}%)</span>
+                </div>
+                <div class="legend-item">
+                  <div class="legend-color legend-variable"></div>
+                  <span>Biaya Variabel (${variableCostPercent.toFixed(1)}%)</span>
+                </div>
               </div>
-              <div class="result-row">
-                <span class="result-label">Biaya Variabel (${variableCostPercent.toFixed(1)}%)</span>
-                <span class="result-value">Rp ${(totalVariableCost * estimatedSales).toLocaleString('id-ID')}</span>
+            </div>
+            
+            <div class="cost-detail">
+              <h4 style="color: #A78BFA;">📋 Rincian Biaya Tetap</h4>
+              ${fixedCosts.map(cost => `
+                <div class="cost-item">
+                  <span>${cost.name}</span>
+                  <span>Rp ${cost.amount.toLocaleString('id-ID')}</span>
+                </div>
+              `).join('')}
+              <div class="cost-item cost-total">
+                <span>Total Biaya Tetap</span>
+                <span style="color: #A78BFA;">Rp ${totalFixedCost.toLocaleString('id-ID')}</span>
+              </div>
+            </div>
+            
+            <div class="cost-detail">
+              <h4 style="color: #34D399;">📦 Rincian Biaya Variabel (per unit)</h4>
+              ${variableCosts.map(cost => `
+                <div class="cost-item">
+                  <span>${cost.name} (×${cost.quantity})</span>
+                  <span>Rp ${(cost.amount * cost.quantity).toLocaleString('id-ID')}</span>
+                </div>
+              `).join('')}
+              <div class="cost-item cost-total">
+                <span>Total per Unit</span>
+                <span>Rp ${totalVariableCost.toLocaleString('id-ID')}</span>
+              </div>
+              <div class="cost-item cost-total">
+                <span>Total untuk ${estimatedSales} unit</span>
+                <span style="color: #34D399;">Rp ${(totalVariableCost * estimatedSales).toLocaleString('id-ID')}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="section">
+            <div class="section-title">⚠️ Simulasi Resiko</div>
+            
+            <div class="simulation-box">
+              <div class="simulation-title">📈 Kenaikan Harga Bahan Baku +20%</div>
+              <div class="simulation-result">BPP Baru: <strong>Rp ${Math.round(materialSimulation.newBpp).toLocaleString('id-ID')}</strong></div>
+              <div class="simulation-result">Harga Jual Baru: <strong>Rp ${Math.round(materialSimulation.newSellingPrice).toLocaleString('id-ID')}</strong></div>
+              <div class="simulation-result" style="color: #F59E0B; font-weight: bold;">
+                ⚠️ Naikkan harga Rp ${Math.round(materialSimulation.priceIncrease).toLocaleString('id-ID')} atau margin turun!
+              </div>
+            </div>
+            
+            <div class="simulation-box" style="background: #fee2e2; border-left-color: #EF4444;">
+              <div class="simulation-title" style="color: #991b1b;">📉 Penurunan Penjualan -30%</div>
+              <div class="simulation-result">Penjualan Baru: <strong>${salesSimulation.newSales} unit/bulan</strong></div>
+              <div class="simulation-result">Keuntungan: <strong style="color: ${salesSimulation.stillProfitable ? '#10B981' : '#EF4444'}">
+                Rp ${Math.round(salesSimulation.newProfit).toLocaleString('id-ID')}
+              </strong></div>
+              <div class="simulation-result" style="color: ${salesSimulation.stillProfitable ? '#10B981' : '#EF4444'}; font-weight: bold;">
+                ${salesSimulation.stillProfitable ? '✅ Masih untung, tapi tipis!' : '❌ Rugi! Perlu efisiensi biaya'}
               </div>
             </div>
           </div>
@@ -210,7 +314,7 @@ export default function ResultPage() {
             <div class="section-title">💡 Rekomendasi Aksi</div>
             ${recommendations.map(rec => `
               <div class="recommendation">
-                <strong>${rec.title}</strong><br>
+                <strong>${rec.title}</strong>
                 ${rec.description}
               </div>
             `).join('')}
@@ -226,14 +330,8 @@ export default function ResultPage() {
     `;
     
     try {
-      const { uri } = await Print.createAsync({ html: htmlContent });
-      const fileName = `Hasil_NGITUNG_${note.name.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`;
-      
-      if (Platform.OS === 'ios') {
-        await Sharing.shareAsync(uri, { UTI: '.pdf', mimeType: 'application/pdf' });
-      } else {
-        await Sharing.shareAsync(uri);
-      }
+      const { uri } = await Print.printToFileAsync({ html: htmlContent });
+      await Sharing.shareAsync(uri);
     } catch (error) {
       Alert.alert('Error', 'Gagal membuat PDF');
       console.error(error);
@@ -286,10 +384,32 @@ export default function ResultPage() {
           </TouchableOpacity>
           
           <View style={styles.pieChartContainer}>
-            <View style={styles.pieChart}>
-              <View style={[styles.pieSlice, { flex: fixedCostPercent, backgroundColor: theme.colors.primary }]} />
-              <View style={[styles.pieSlice, { flex: variableCostPercent, backgroundColor: theme.colors.secondary }]} />
-            </View>
+            <Svg width={160} height={160} viewBox="0 0 100 100">
+              {/* Background circle */}
+              <Circle
+                cx="50"
+                cy="50"
+                r="40"
+                fill="none"
+                stroke={theme.colors.secondary}
+                strokeWidth="20"
+                strokeDasharray={`${variableCostPercent * 2.513} ${100 * 2.513}`}
+                strokeDashoffset="0"
+                transform="rotate(-90 50 50)"
+              />
+              {/* Foreground circle for fixed costs */}
+              <Circle
+                cx="50"
+                cy="50"
+                r="40"
+                fill="none"
+                stroke={theme.colors.primary}
+                strokeWidth="20"
+                strokeDasharray={`${fixedCostPercent * 2.513} ${100 * 2.513}`}
+                strokeDashoffset={`-${variableCostPercent * 2.513}`}
+                transform="rotate(-90 50 50)"
+              />
+            </Svg>
           </View>
           
           <View style={styles.costBreakdown}>
@@ -319,15 +439,29 @@ export default function ResultPage() {
                     <Text style={[styles.detailAmount, { color: theme.colors.text }]}>Rp {cost.amount.toLocaleString('id-ID')}</Text>
                   </View>
                 ))}
+                <View style={[styles.totalSeparator, { borderColor: theme.colors.border }]} />
+                <View style={styles.detailRow}>
+                  <Text style={[styles.detailName, { color: theme.colors.text, fontWeight: '700' }]}>Total Biaya Tetap</Text>
+                  <Text style={[styles.detailAmount, { color: theme.colors.primary, fontWeight: '700' }]}>Rp {totalFixedCost.toLocaleString('id-ID')}</Text>
+                </View>
               </View>
               <View style={[styles.detailSection, { borderColor: theme.colors.border }]}>
-                <Text style={[styles.detailTitle, { color: theme.colors.secondary }]}>Rincian Biaya Variabel</Text>
+                <Text style={[styles.detailTitle, { color: theme.colors.secondary }]}>Rincian Biaya Variabel (per unit)</Text>
                 {variableCosts.map((cost, index) => (
                   <View key={index} style={styles.detailRow}>
                     <Text style={[styles.detailName, { color: theme.colors.textSecondary }]}>{cost.name} (×{cost.quantity})</Text>
                     <Text style={[styles.detailAmount, { color: theme.colors.text }]}>Rp {(cost.amount * cost.quantity).toLocaleString('id-ID')}</Text>
                   </View>
                 ))}
+                <View style={[styles.totalSeparator, { borderColor: theme.colors.border }]} />
+                <View style={styles.detailRow}>
+                  <Text style={[styles.detailName, { color: theme.colors.text, fontWeight: '700' }]}>Total per Unit</Text>
+                  <Text style={[styles.detailAmount, { color: theme.colors.text, fontWeight: '700' }]}>Rp {totalVariableCost.toLocaleString('id-ID')}</Text>
+                </View>
+                <View style={styles.detailRow}>
+                  <Text style={[styles.detailName, { color: theme.colors.text, fontWeight: '700' }]}>Total untuk {estimatedSales} unit</Text>
+                  <Text style={[styles.detailAmount, { color: theme.colors.secondary, fontWeight: '700', fontSize: 16 }]}>Rp {(totalVariableCost * estimatedSales).toLocaleString('id-ID')}</Text>
+                </View>
               </View>
             </Animated.View>
           )}
@@ -460,12 +594,12 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 20,
-    paddingBottom: 100,
+    paddingBottom: 40,
     paddingTop: Platform.OS === 'android' ? 40 : 50,
   },
   floatingBackButton: {
     position: 'absolute',
-    bottom: 80,
+    bottom: 10,
     left: 20,
     width: 56,
     height: 56,
@@ -566,17 +700,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginVertical: 20,
   },
-  pieChart: {
-    flexDirection: 'row',
-    width: 200,
-    height: 200,
-    borderRadius: 100,
-    overflow: 'hidden',
-    transform: [{ rotate: '-90deg' }],
-  },
-  pieSlice: {
-    height: '100%',
-  },
   costBreakdown: {
     marginTop: 16,
   },
@@ -631,6 +754,12 @@ const styles = StyleSheet.create({
   detailAmount: {
     fontSize: 13,
     fontWeight: '600',
+  },
+  totalSeparator: {
+    height: 1,
+    borderTopWidth: 1,
+    marginVertical: 12,
+    marginHorizontal: -4,
   },
   simulationCard: {
     padding: 16,
@@ -712,5 +841,6 @@ const styles = StyleSheet.create({
   errorMessage: {
     fontSize: 16,
     textAlign: 'center',
+    marginBottom: 30,
   },
 });

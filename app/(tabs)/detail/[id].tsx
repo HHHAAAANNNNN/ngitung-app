@@ -483,7 +483,7 @@ const styles = StyleSheet.create({
   },
   floatingBackButton: {
     position: 'absolute',
-    bottom: 80,
+    bottom: 10,
     left: 20,
     width: 56,
     height: 56,
