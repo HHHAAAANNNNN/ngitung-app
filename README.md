@@ -5,8 +5,8 @@
 **Kelola Usaha Dengan Mudah**
 
 [![React Native](https://img.shields.io/badge/React%20Native-0.81.5-blue.svg)](https://reactnative.dev/)
-[![Expo](https://img.shields.io/badge/Expo-~54.0-black.svg)](https://expo.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-~5.9-blue.svg)](https://www.typescriptlang.org/)
+[![Expo](https://img.shields.io/badge/Expo-~54.0.30-black.svg)](https://expo.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-~5.9.2-blue.svg)](https://www.typescriptlang.org/)
 [![License](https://img.shields.io/badge/license-Private-red.svg)]()
 
 A modern, beautiful mobile application for managing business costs and calculating product pricing. Built with React Native and Expo, NGITUNG helps small business owners and entrepreneurs easily calculate Cost of Goods Sold (COGS/BPP) and determine optimal selling prices.
@@ -228,9 +228,9 @@ Variable costs are per-unit expenses:
 ## 🛠️ Technology Stack
 
 - **[React Native](https://reactnative.dev/)** `0.81.5` - Cross-platform mobile framework
-- **[Expo](https://expo.dev/)** `~54.0` - Development platform and tools
-- **[TypeScript](https://www.typescriptlang.org/)** `~5.9` - Type-safe JavaScript
-- **[Expo Router](https://docs.expo.dev/router/introduction/)** `~6.0` - File-based routing
+- **[Expo](https://expo.dev/)** `~54.0.30` - Development platform and tools
+- **[TypeScript](https://www.typescriptlang.org/)** `~5.9.2` - Type-safe JavaScript
+- **[Expo Router](https://docs.expo.dev/router/introduction/)** `~6.0.21` - File-based routing
 - **[React Native Reanimated](https://docs.swmansion.com/react-native-reanimated/)** - Smooth animations
 - **[React Native Paper](https://callstack.github.io/react-native-paper/)** - UI components
 - **[Expo Vector Icons](https://icons.expo.fyi/)** - Icon library
