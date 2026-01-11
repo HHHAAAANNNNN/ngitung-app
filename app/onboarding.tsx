@@ -130,23 +130,6 @@ export default function OnboardingScreen() {
         <Text style={styles.languageText}>{language.toUpperCase()}</Text>
       </TouchableOpacity>
 
-      {/* Progress Indicator */}
-      <View style={styles.progressContainer}>
-        <View style={styles.progressBar}>
-          <Animated.View 
-            style={[
-              styles.progressFill,
-              {
-                width: `${((currentIndex + 1) / slides.length) * 100}%`,
-              }
-            ]} 
-          />
-        </View>
-        <Text style={styles.progressText}>
-          {Math.round(((currentIndex + 1) / slides.length) * 100)}%
-        </Text>
-      </View>
-
       {/* Slides */}
       <Animated.ScrollView
         ref={scrollViewRef}
@@ -237,6 +220,23 @@ export default function OnboardingScreen() {
               </TouchableOpacity>
             </>
           ) : null}
+        </View>
+
+        {/* Progress Indicator */}
+        <View style={styles.progressContainer}>
+          <View style={styles.progressBar}>
+            <Animated.View 
+              style={[
+                styles.progressFill,
+                {
+                  width: `${((currentIndex + 1) / slides.length) * 100}%`,
+                }
+              ]} 
+            />
+          </View>
+          <Text style={styles.progressText}>
+            {Math.round(((currentIndex + 1) / slides.length) * 100)}%
+          </Text>
         </View>
       </View>
     </View>
@@ -357,14 +357,6 @@ const SlideItem: React.FC<SlideItemProps> = ({
               <MaterialIcons name="rocket-launch" size={24} color="white" style={{ marginRight: 8 }} />
               <Text style={styles.getStartedText}>{t.getStarted}</Text>
             </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={styles.notReadyButton} 
-              onPress={onNotReady}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.notReadyText}>{t.notReady}</Text>
-            </TouchableOpacity>
           </View>
         )}
       </Animated.View>
@@ -418,13 +410,12 @@ const styles = StyleSheet.create({
     marginLeft: 6,
   },
   progressContainer: {
-    position: 'absolute',
-    top: 110,
-    left: 20,
-    right: 20,
     flexDirection: 'row',
     alignItems: 'center',
-    zIndex: 10,
+    marginTop: 20,
+    paddingTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.1)',
   },
   progressBar: {
     flex: 1,
@@ -449,7 +440,7 @@ const styles = StyleSheet.create({
   slide: {
     width: SCREEN_WIDTH,
     flex: 1,
-    paddingTop: 140,
+    paddingTop: 100,
   },
   imageContainer: {
     flex: 1,
@@ -517,7 +508,6 @@ const styles = StyleSheet.create({
   finalButtonsContainer: {
     width: '100%',
     marginTop: 40,
-    gap: 16,
   },
   getStartedButton: {
     flexDirection: 'row',

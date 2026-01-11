@@ -182,24 +182,24 @@ export default function MainPage() {
   return (
     <GradientBackground>
       <View style={styles.header}>
-        {/* Top Right Actions */}
-        <View style={styles.headerActions}>
-          <TouchableOpacity 
-            style={styles.helpButton} 
-            onPress={handleViewTutorial}
-            activeOpacity={0.8}
-          >
-            <MaterialIcons name="help-outline" size={22} color={theme.colors.primary} />
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={styles.languageToggle} 
-            onPress={() => setLanguage(language === 'id' ? 'en' : 'id')}
-            activeOpacity={0.8}
-          >
-            <MaterialIcons name="language" size={18} color={theme.colors.primary} />
-            <Text style={[styles.languageText, { color: theme.colors.primary }]}>{language.toUpperCase()}</Text>
-          </TouchableOpacity>
-        </View>
+        {/* Help Button - Left */}
+        <TouchableOpacity 
+          style={styles.helpButton} 
+          onPress={handleViewTutorial}
+          activeOpacity={0.8}
+        >
+          <MaterialIcons name="help-outline" size={22} color={theme.colors.primary} />
+        </TouchableOpacity>
+
+        {/* Language Toggle - Right */}
+        <TouchableOpacity 
+          style={styles.languageToggle} 
+          onPress={() => setLanguage(language === 'id' ? 'en' : 'id')}
+          activeOpacity={0.8}
+        >
+          <MaterialIcons name="language" size={18} color={theme.colors.primary} />
+          <Text style={[styles.languageText, { color: theme.colors.primary }]}>{language.toUpperCase()}</Text>
+        </TouchableOpacity>
 
         <Text style={[styles.title, { color: theme.colors.primary }]}>{t.appTitle}</Text>
         <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>{t.appSubtitle}</Text>
@@ -679,16 +679,10 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
     position: 'relative',
   },
-  headerActions: {
+  helpButton: {
     position: 'absolute',
     top: Platform.OS === 'android' ? 45 : 65,
-    right: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    zIndex: 10,
-  },
-  helpButton: {
+    left: 20,
     width: 40,
     height: 40,
     borderRadius: 20,
@@ -697,8 +691,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1,
     borderColor: 'rgba(167, 139, 250, 0.3)',
+    zIndex: 10,
   },
   languageToggle: {
+    position: 'absolute',
+    top: Platform.OS === 'android' ? 45 : 65,
+    right: 20,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(167, 139, 250, 0.15)',
@@ -707,6 +705,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 1,
     borderColor: 'rgba(167, 139, 250, 0.3)',
+    zIndex: 10,
   },
   languageText: {
     fontSize: 12,
