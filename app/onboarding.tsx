@@ -49,7 +49,7 @@ const slides = [
 export default function OnboardingScreen() {
   const router = useRouter();
   const { language, setLanguage, t } = useLanguage();
-  const { mode, toggleTheme } = useTheme();
+  const { mode, toggleTheme, colors } = useTheme();
   const scrollX = useSharedValue(0);
   const scrollViewRef = useRef<Animated.ScrollView>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -117,28 +117,28 @@ export default function OnboardingScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Background Gradients */}
-      <View style={styles.gradientTopLeft} />
-      <View style={styles.gradientBottomRight} />
+      <View style={[styles.gradientTopLeft, { backgroundColor: mode === 'dark' ? 'rgba(167, 139, 250, 0.15)' : 'rgba(139, 92, 246, 0.1)' }]} />
+      <View style={[styles.gradientBottomRight, { backgroundColor: mode === 'dark' ? 'rgba(244, 114, 182, 0.15)' : 'rgba(236, 72, 153, 0.1)' }]} />
 
       {/* Theme Toggle - Top Right */}
       <TouchableOpacity 
-        style={[styles.themeToggle]} 
+        style={[styles.themeToggle, { backgroundColor: mode === 'dark' ? 'rgba(167, 139, 250, 0.15)' : 'rgba(139, 92, 246, 0.15)', borderColor: mode === 'dark' ? 'rgba(167, 139, 250, 0.3)' : 'rgba(139, 92, 246, 0.3)' }]} 
         onPress={toggleTheme}
         activeOpacity={0.8}
       >
-        <MaterialIcons name={mode === 'dark' ? 'light-mode' : 'dark-mode'} size={24} color="#A78BFA" />
+        <MaterialIcons name={mode === 'dark' ? 'light-mode' : 'dark-mode'} size={24} color={colors.primary} />
       </TouchableOpacity>
 
       {/* Language Toggle - Top Right */}
       <TouchableOpacity 
-        style={styles.languageToggle} 
+        style={[styles.languageToggle, { backgroundColor: mode === 'dark' ? 'rgba(167, 139, 250, 0.15)' : 'rgba(139, 92, 246, 0.15)', borderColor: mode === 'dark' ? 'rgba(167, 139, 250, 0.3)' : 'rgba(139, 92, 246, 0.3)' }]} 
         onPress={toggleLanguage}
         activeOpacity={0.8}
       >
-        <MaterialIcons name="language" size={20} color="#A78BFA" />
-        <Text style={styles.languageText}>{language.toUpperCase()}</Text>
+        <MaterialIcons name="language" size={20} color={colors.primary} />
+        <Text style={[styles.languageText, { color: colors.primary }]}>{language.toUpperCase()}</Text>
       </TouchableOpacity>
 
       {/* Slides */}
@@ -165,6 +165,8 @@ export default function OnboardingScreen() {
             onGetStarted={handleGetStarted}
             onNotReady={handleSkip}
             t={t}
+            colors={colors}
+            mode={mode}
           />
         ))}
       </Animated.ScrollView>
@@ -204,7 +206,7 @@ export default function OnboardingScreen() {
             return (
               <Animated.View
                 key={index}
-                style={[styles.dot, dotStyle]}
+                style={[styles.dot, dotStyle, { backgroundColor: colors.primary }]}
               />
             );
           })}
@@ -219,10 +221,10 @@ export default function OnboardingScreen() {
                 onPress={handleSkip}
                 activeOpacity={0.7}
               >
-                <Text style={styles.skipText}>{t.skip}</Text>
+                <Text style={[styles.skipText, { color: colors.textSecondary }]}>{t.skip}</Text>
               </TouchableOpacity>
               <TouchableOpacity 
-                style={styles.nextButton} 
+                style={[styles.nextButton, { backgroundColor: colors.primary }]} 
                 onPress={handleNext}
                 activeOpacity={0.85}
               >
@@ -246,6 +248,8 @@ interface SlideItemProps {
   onGetStarted: () => void;
   onNotReady: () => void;
   t: any;
+  colors: any;
+  mode: string;
 }
 
 const SlideItem: React.FC<SlideItemProps> = ({
@@ -257,6 +261,8 @@ const SlideItem: React.FC<SlideItemProps> = ({
   onGetStarted,
   onNotReady,
   t,
+  colors,
+  mode,
 }) => {
   const imageAnimatedStyle = useAnimatedStyle(() => {
     const inputRange = [
@@ -317,7 +323,11 @@ const SlideItem: React.FC<SlideItemProps> = ({
       {/* Image or Final Content */}
       {!isLastSlide && slide.image ? (
         <Animated.View style={[styles.imageContainer, imageAnimatedStyle]}>
-          <View style={styles.imageWrapper}>
+          <View style={[styles.imageWrapper, { 
+            backgroundColor: mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
+            borderColor: mode === 'dark' ? 'rgba(167, 139, 250, 0.3)' : 'rgba(99, 102, 241, 0.3)',
+            shadowColor: colors.primary
+          }]}>
             <Image 
               source={slide.image} 
               style={styles.image}
@@ -327,22 +337,22 @@ const SlideItem: React.FC<SlideItemProps> = ({
         </Animated.View>
       ) : (
         <Animated.View style={[styles.imageContainer, imageAnimatedStyle]}>
-          <View style={styles.checkIconCircle}>
-            <MaterialIcons name="check-circle" size={120} color="#34D399" />
+          <View style={[styles.checkIconCircle, { backgroundColor: mode === 'dark' ? 'rgba(52, 211, 153, 0.15)' : 'rgba(16, 185, 129, 0.15)', borderColor: mode === 'dark' ? 'rgba(52, 211, 153, 0.3)' : 'rgba(16, 185, 129, 0.3)' }]}>
+            <MaterialIcons name="check-circle" size={120} color={colors.secondary} />
           </View>
         </Animated.View>
       )}
 
       {/* Text Content */}
       <Animated.View style={[styles.textContainer, textAnimatedStyle]}>
-        <Text style={styles.title}>{content.title}</Text>
-        <Text style={styles.description}>{content.description}</Text>
+        <Text style={[styles.title, { color: colors.text }]}>{content.title}</Text>
+        <Text style={[styles.description, { color: colors.textSecondary }]}>{content.description}</Text>
 
         {/* Final Slide Buttons */}
         {isLastSlide && (
           <View style={styles.finalButtonsContainer}>
             <TouchableOpacity 
-              style={styles.getStartedButton} 
+              style={[styles.getStartedButton, { backgroundColor: colors.primary }]} 
               onPress={onGetStarted}
               activeOpacity={0.85}
             >
@@ -359,7 +369,6 @@ const SlideItem: React.FC<SlideItemProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0F0A1F',
   },
   gradientTopLeft: {
     position: 'absolute',
@@ -367,7 +376,6 @@ const styles = StyleSheet.create({
     left: -100,
     width: 300,
     height: 300,
-    backgroundColor: 'rgba(167, 139, 250, 0.2)',
     borderRadius: 200,
     zIndex: 0,
   },
@@ -377,7 +385,6 @@ const styles = StyleSheet.create({
     right: -100,
     width: 350,
     height: 350,
-    backgroundColor: 'rgba(244, 114, 182, 0.15)',
     borderRadius: 200,
     zIndex: 0,
   },
@@ -387,12 +394,10 @@ const styles = StyleSheet.create({
     right: 20,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(167, 139, 250, 0.15)',
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(167, 139, 250, 0.3)',
     zIndex: 10,
   },
   themeToggle: {
@@ -401,16 +406,13 @@ const styles = StyleSheet.create({
     right: 90,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(167, 139, 250, 0.15)',
     paddingHorizontal: 10,
     paddingVertical: 8,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(167, 139, 250, 0.3)',
     zIndex: 10,
   },
   languageText: {
-    color: '#A78BFA',
     fontSize: 14,
     fontWeight: '700',
     marginLeft: 6,
@@ -431,10 +433,7 @@ const styles = StyleSheet.create({
     height: SCREEN_WIDTH * 0.75,
     borderRadius: 30,
     overflow: 'hidden',
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderWidth: 2,
-    borderColor: 'rgba(167, 139, 250, 0.3)',
-    shadowColor: '#A78BFA',
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.3,
     shadowRadius: 20,
@@ -457,11 +456,9 @@ const styles = StyleSheet.create({
     width: 140,
     height: 140,
     borderRadius: 70,
-    backgroundColor: 'rgba(52, 211, 153, 0.15)',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 3,
-    borderColor: 'rgba(52, 211, 153, 0.3)',
   },
   textContainer: {
     paddingHorizontal: 30,
@@ -471,14 +468,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#F9FAFB',
     textAlign: 'center',
     marginBottom: 16,
     letterSpacing: -0.5,
   },
   description: {
     fontSize: 16,
-    color: '#9CA3AF',
     textAlign: 'center',
     lineHeight: 24,
     paddingHorizontal: 10,
@@ -489,13 +484,11 @@ const styles = StyleSheet.create({
   },
   getStartedButton: {
     flexDirection: 'row',
-    backgroundColor: '#A78BFA',
     paddingVertical: 18,
     paddingHorizontal: 32,
     borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#A78BFA',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.4,
     shadowRadius: 12,
@@ -508,17 +501,14 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
   notReadyButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     paddingVertical: 16,
     paddingHorizontal: 32,
     borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
   },
   notReadyText: {
-    color: '#9CA3AF',
     fontSize: 16,
     fontWeight: '600',
   },
@@ -536,7 +526,6 @@ const styles = StyleSheet.create({
   dot: {
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#A78BFA',
   },
   buttonContainer: {
     flexDirection: 'row',
@@ -548,26 +537,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   skipText: {
-    color: '#9CA3AF',
     fontSize: 16,
     fontWeight: '600',
   },
   nextButton: {
     flexDirection: 'row',
-    backgroundColor: '#A78BFA',
     paddingVertical: 14,
     paddingHorizontal: 28,
     borderRadius: 14,
     alignItems: 'center',
     gap: 8,
-    shadowColor: '#A78BFA',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 4,
   },
   nextText: {
-    color: 'white',
     fontSize: 16,
     fontWeight: '700',
   },

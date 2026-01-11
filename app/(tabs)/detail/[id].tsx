@@ -1,48 +1,30 @@
-// app/(tabs)/detail/[id].tsx
 import { MaterialIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown, FadeOutUp, SlideInDown, SlideInRight, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useNotes } from '../../../src/context/NoteContext';
+import { useTheme } from '../../../src/context/ThemeContext';
 import { formatCurrency, formatCurrencyInput, parseCurrency } from '../../../src/utils/currency';
 
 export default function DetailPage() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { notes, updateNote } = useNotes();
   const router = useRouter();
-  
-  // Dark theme
-  const theme = {
-    colors: {
-      primary: '#A78BFA',
-      secondary: '#34D399',
-      accent: '#F472B6',
-      background: '#0F0A1F',
-      surface: 'rgba(255, 255, 255, 0.1)',
-      surfaceDark: 'rgba(30, 27, 75, 0.6)',
-      text: '#F9FAFB',
-      textSecondary: '#9CA3AF',
-      border: 'rgba(255, 255, 255, 0.2)',
-      error: '#EF4444',
-      success: '#10B981',
-      outline: '#6B7280',
-    }
-  };
-  
+  const { colors: theme } = useTheme();
   const note = notes.find(n => n.id === id);
   if (!note) {
     return (
-      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <View style={[styles.container, { backgroundColor: theme.background }]}>
         <View style={styles.errorContainer}>
-          <MaterialIcons name="error-outline" size={64} color={theme.colors.error} />
-          <Text style={[styles.errorTitle, { color: theme.colors.text }]}>Catatan Tidak Ditemukan</Text>
+          <MaterialIcons name="error-outline" size={64} color={theme.error} />
+          <Text style={[styles.errorTitle, { color: theme.text }]}>Catatan Tidak Ditemukan</Text>
           <TouchableOpacity 
             onPress={() => router.back()}
-            style={[styles.backButtonError, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}
+            style={[styles.backButtonError, { backgroundColor: theme.surface, borderColor: theme.border }]}
           >
-            <MaterialIcons name="arrow-back" size={20} color={theme.colors.primary} />
-            <Text style={[styles.backLinkText, { color: theme.colors.primary }]}>Kembali ke Daftar</Text>
+            <MaterialIcons name="arrow-back" size={20} color={theme.primary} />
+            <Text style={[styles.backLinkText, { color: theme.primary }]}>Kembali ke Daftar</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -242,7 +224,7 @@ export default function DetailPage() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
         {/* Gradient Decorations */}
         <View style={[styles.gradientCircle1, { backgroundColor: 'rgba(167, 139, 250, 0.1)' }]} />
         <View style={[styles.gradientCircle2, { backgroundColor: 'rgba(244, 114, 182, 0.08)' }]} />
@@ -250,9 +232,9 @@ export default function DetailPage() {
         {/* Floating Back Button */}
         <TouchableOpacity 
           onPress={() => router.back()}
-          style={[styles.floatingBackButton, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}
+          style={[styles.floatingBackButton, { backgroundColor: theme.surface, borderColor: theme.border }]}
         >
-          <MaterialIcons name="arrow-back" size={24} color={theme.colors.text} />
+          <MaterialIcons name="arrow-back" size={24} color={theme.text} />
         </TouchableOpacity>
       
       <ScrollView 
@@ -262,28 +244,28 @@ export default function DetailPage() {
         {/* Header */}
         <Animated.View entering={FadeIn.duration(400)} style={styles.header}>
           <View style={styles.headerContent}>
-            <Text style={[styles.title, { color: theme.colors.text }]}>{note.name}</Text>
-            <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>Input data biaya untuk perhitungan akurat</Text>
+            <Text style={[styles.title, { color: theme.text }]}>{note.name}</Text>
+            <Text style={[styles.subtitle, { color: theme.textSecondary }]}>Input data biaya untuk perhitungan akurat</Text>
           </View>
         </Animated.View>
 
         {/* Biaya Tetap */}
-        <Animated.View entering={SlideInRight.delay(100).duration(300)} style={[styles.section, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
+        <Animated.View entering={SlideInRight.delay(100).duration(300)} style={[styles.section, { backgroundColor: theme.surface, borderColor: theme.border }]}>
           <View style={styles.sectionHeader}>
-            <MaterialIcons name="calendar-today" size={24} color={theme.colors.primary} />
+            <MaterialIcons name="calendar-today" size={24} color={theme.primary} />
             <View style={styles.sectionHeaderText}>
-              <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Biaya Tetap</Text>
-              <Text style={[styles.helperText, { color: theme.colors.textSecondary }]}>Per bulan (sewa, listrik, gaji)</Text>
+              <Text style={[styles.sectionTitle, { color: theme.text }]}>Biaya Tetap</Text>
+              <Text style={[styles.helperText, { color: theme.textSecondary }]}>Per bulan (sewa, listrik, gaji)</Text>
             </View>
           </View>
           
           {fixedCosts.map((item, index) => (
             <View key={item.id} style={styles.costItemCard}>
               <View style={styles.costItemHeader}>
-                <View style={[styles.inputContainer, styles.nameInputFull, { backgroundColor: 'rgba(0,0,0,0.2)', borderColor: theme.colors.border }]}>
-                  <MaterialIcons name="label-outline" size={18} color={theme.colors.textSecondary} />
+                <View style={[styles.inputContainer, styles.nameInputFull, { backgroundColor: 'rgba(0,0,0,0.2)', borderColor: theme.border }]}>
+                  <MaterialIcons name="label-outline" size={18} color={theme.textSecondary} />
                   <TextInput
-                    style={[styles.input, { color: theme.colors.text }]}
+                    style={[styles.input, { color: theme.text }]}
                     value={item.name}
                     onChangeText={text => {
                       const newCosts = [...fixedCosts];
@@ -291,21 +273,21 @@ export default function DetailPage() {
                       setFixedCosts(newCosts);
                     }}
                     placeholder="Nama biaya"
-                    placeholderTextColor={theme.colors.textSecondary}
+                    placeholderTextColor={theme.textSecondary}
                     keyboardAppearance="dark"
                   />
                 </View>
                 <TouchableOpacity 
                   onPress={() => removeFixedCost(item.id)} 
-                  style={[styles.deleteButton, { backgroundColor: 'rgba(239, 68, 68, 0.15)', borderColor: theme.colors.error }]}
+                  style={[styles.deleteButton, { backgroundColor: 'rgba(239, 68, 68, 0.15)', borderColor: theme.error }]}
                 >
-                  <MaterialIcons name="delete-outline" size={20} color={theme.colors.error} />
+                  <MaterialIcons name="delete-outline" size={20} color={theme.error} />
                 </TouchableOpacity>
               </View>
-              <View style={[styles.inputContainer, { backgroundColor: 'rgba(0,0,0,0.2)', borderColor: theme.colors.border }]}>
-                <Text style={[styles.currency, { color: theme.colors.textSecondary }]}>Rp</Text>
+              <View style={[styles.inputContainer, { backgroundColor: 'rgba(0,0,0,0.2)', borderColor: theme.border }]}>
+                <Text style={[styles.currency, { color: theme.textSecondary }]}>Rp</Text>
                 <TextInput
-                  style={[styles.input, { color: theme.colors.text }]}
+                  style={[styles.input, { color: theme.text }]}
                   value={item.amount !== null && item.amount !== undefined ? formatCurrency(item.amount) : ''}
                   onChangeText={text => {
                     const formatted = formatCurrencyInput(text);
@@ -315,7 +297,7 @@ export default function DetailPage() {
                   }}
                   keyboardType="numeric"
                   placeholder="0"
-                  placeholderTextColor={theme.colors.textSecondary}
+                  placeholderTextColor={theme.textSecondary}
                   keyboardAppearance="dark"
                 />
               </View>
@@ -324,30 +306,30 @@ export default function DetailPage() {
           
           <TouchableOpacity 
             onPress={addFixedCost} 
-            style={[styles.addButton, { borderColor: theme.colors.primary }]}
+            style={[styles.addButton, { borderColor: theme.primary }]}
           >
-            <MaterialIcons name="add" size={20} color={theme.colors.primary} />
-            <Text style={[styles.addButtonText, { color: theme.colors.primary }]}>Tambah Biaya Tetap</Text>
+            <MaterialIcons name="add" size={20} color={theme.primary} />
+            <Text style={[styles.addButtonText, { color: theme.primary }]}>Tambah Biaya Tetap</Text>
           </TouchableOpacity>
         </Animated.View>
 
         {/* Biaya Variabel */}
-        <Animated.View entering={SlideInRight.delay(200).duration(300)} style={[styles.section, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
+        <Animated.View entering={SlideInRight.delay(200).duration(300)} style={[styles.section, { backgroundColor: theme.surface, borderColor: theme.border }]}>
           <View style={styles.sectionHeader}>
-            <MaterialIcons name="shopping-cart" size={24} color={theme.colors.secondary} />
+            <MaterialIcons name="shopping-cart" size={24} color={theme.secondary} />
             <View style={styles.sectionHeaderText}>
-              <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Biaya Variabel</Text>
-              <Text style={[styles.helperText, { color: theme.colors.textSecondary }]}>Per unit (bahan baku, kemasan)</Text>
+              <Text style={[styles.sectionTitle, { color: theme.text }]}>Biaya Variabel</Text>
+              <Text style={[styles.helperText, { color: theme.textSecondary }]}>Per unit (bahan baku, kemasan)</Text>
             </View>
           </View>
           
           {variableCosts.map((item, index) => (
             <View key={item.id} style={styles.costItemCard}>
               <View style={styles.costItemHeader}>
-                <View style={[styles.inputContainer, styles.nameInputFull, { backgroundColor: 'rgba(0,0,0,0.2)', borderColor: theme.colors.border }]}>
-                  <MaterialIcons name="inventory" size={18} color={theme.colors.textSecondary} />
+                <View style={[styles.inputContainer, styles.nameInputFull, { backgroundColor: 'rgba(0,0,0,0.2)', borderColor: theme.border }]}>
+                  <MaterialIcons name="inventory" size={18} color={theme.textSecondary} />
                   <TextInput
-                    style={[styles.input, { color: theme.colors.text }]}
+                    style={[styles.input, { color: theme.text }]}
                     value={item.name}
                     onChangeText={text => {
                       const newCosts = [...variableCosts];
@@ -355,22 +337,22 @@ export default function DetailPage() {
                       setVariableCosts(newCosts);
                     }}
                     placeholder="Nama bahan"
-                    placeholderTextColor={theme.colors.textSecondary}
+                    placeholderTextColor={theme.textSecondary}
                     keyboardAppearance="dark"
                   />
                 </View>
                 <TouchableOpacity 
                   onPress={() => removeVariableCost(item.id)} 
-                  style={[styles.deleteButton, { backgroundColor: 'rgba(239, 68, 68, 0.15)', borderColor: theme.colors.error }]}
+                  style={[styles.deleteButton, { backgroundColor: 'rgba(239, 68, 68, 0.15)', borderColor: theme.error }]}
                 >
-                  <MaterialIcons name="delete-outline" size={20} color={theme.colors.error} />
+                  <MaterialIcons name="delete-outline" size={20} color={theme.error} />
                 </TouchableOpacity>
               </View>
               <View style={styles.variableInputRow}>
-                <View style={[styles.inputContainer, styles.variableInputItem, { backgroundColor: 'rgba(0,0,0,0.2)', borderColor: theme.colors.border }]}>
-                  <Text style={[styles.currency, { color: theme.colors.textSecondary, fontSize: 12 }]}>Rp</Text>
+                <View style={[styles.inputContainer, styles.variableInputItem, { backgroundColor: 'rgba(0,0,0,0.2)', borderColor: theme.border }]}>
+                  <Text style={[styles.currency, { color: theme.textSecondary, fontSize: 12 }]}>Rp</Text>
                   <TextInput
-                    style={[styles.input, { color: theme.colors.text, fontSize: 14 }]}
+                    style={[styles.input, { color: theme.text, fontSize: 14 }]}
                     value={item.amount !== null && item.amount !== undefined ? formatCurrency(item.amount) : ''}
                     onChangeText={text => {
                       const formatted = formatCurrencyInput(text);
@@ -380,14 +362,14 @@ export default function DetailPage() {
                     }}
                     keyboardType="numeric"
                     placeholder="Harga"
-                    placeholderTextColor={theme.colors.textSecondary}
+                    placeholderTextColor={theme.textSecondary}
                     keyboardAppearance="dark"
                   />
                 </View>
-                <View style={[styles.inputContainer, styles.variableInputItem, { backgroundColor: 'rgba(0,0,0,0.2)', borderColor: theme.colors.border }]}>
-                  <MaterialIcons name="format-list-numbered" size={14} color={theme.colors.textSecondary} />
+                <View style={[styles.inputContainer, styles.variableInputItem, { backgroundColor: 'rgba(0,0,0,0.2)', borderColor: theme.border }]}>
+                  <MaterialIcons name="format-list-numbered" size={14} color={theme.textSecondary} />
                   <TextInput
-                    style={[styles.input, { color: theme.colors.text, fontSize: 14 }]}
+                    style={[styles.input, { color: theme.text, fontSize: 14 }]}
                     value={item.quantity !== null && item.quantity !== undefined ? item.quantity.toString() : ''}
                     onChangeText={text => {
                       const newCosts = [...variableCosts];
@@ -396,7 +378,7 @@ export default function DetailPage() {
                     }}
                     keyboardType="numeric"
                     placeholder="Qty"
-                    placeholderTextColor={theme.colors.textSecondary}
+                    placeholderTextColor={theme.textSecondary}
                     keyboardAppearance="dark"
                   />
                 </View>
@@ -406,130 +388,130 @@ export default function DetailPage() {
           
           <TouchableOpacity 
             onPress={addVariableCost} 
-            style={[styles.addButton, { borderColor: theme.colors.secondary }]}
+            style={[styles.addButton, { borderColor: theme.secondary }]}
           >
-            <MaterialIcons name="add" size={20} color={theme.colors.secondary} />
-            <Text style={[styles.addButtonText, { color: theme.colors.secondary }]}>Tambah Biaya Variabel</Text>
+            <MaterialIcons name="add" size={20} color={theme.secondary} />
+            <Text style={[styles.addButtonText, { color: theme.secondary }]}>Tambah Biaya Variabel</Text>
           </TouchableOpacity>
         </Animated.View>
 
         {/* Parameter Perhitungan */}
-        <Animated.View entering={SlideInRight.delay(300).duration(300)} style={[styles.section, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
+        <Animated.View entering={SlideInRight.delay(300).duration(300)} style={[styles.section, { backgroundColor: theme.surface, borderColor: theme.border }]}>
           <View style={styles.sectionHeader}>
-            <MaterialIcons name="calculate" size={24} color={theme.colors.accent} />
+            <MaterialIcons name="calculate" size={24} color={theme.accent} />
             <View style={styles.sectionHeaderText}>
-              <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Parameter Perhitungan</Text>
+              <Text style={[styles.sectionTitle, { color: theme.text }]}>Parameter Perhitungan</Text>
             </View>
           </View>
           
           <View style={styles.parameterRow}>
-            <Text style={[styles.parameterLabel, { color: theme.colors.textSecondary }]}>Margin Keuntungan</Text>
-            <View style={[styles.inputContainer, styles.parameterInput, { backgroundColor: 'rgba(0,0,0,0.2)', borderColor: theme.colors.border }]}>
+            <Text style={[styles.parameterLabel, { color: theme.textSecondary }]}>Margin Keuntungan</Text>
+            <View style={[styles.inputContainer, styles.parameterInput, { backgroundColor: 'rgba(0,0,0,0.2)', borderColor: theme.border }]}>
               <TextInput
-                style={[styles.input, { color: theme.colors.text, textAlign: 'right' }]}
+                style={[styles.input, { color: theme.text, textAlign: 'right' }]}
                 value={profitMargin}
                 onChangeText={setProfitMargin}
                 keyboardType="numeric"
                 placeholder="30"
-                placeholderTextColor={theme.colors.textSecondary}
+                placeholderTextColor={theme.textSecondary}
                 keyboardAppearance="dark"
               />
-              <Text style={[styles.unit, { color: theme.colors.primary }]}>%</Text>
+              <Text style={[styles.unit, { color: theme.primary }]}>%</Text>
             </View>
           </View>
           
           <View style={styles.parameterRow}>
-            <Text style={[styles.parameterLabel, { color: theme.colors.textSecondary }]}>Estimasi Penjualan</Text>
-            <View style={[styles.inputContainer, styles.parameterInput, { backgroundColor: 'rgba(0,0,0,0.2)', borderColor: theme.colors.border }]}>
+            <Text style={[styles.parameterLabel, { color: theme.textSecondary }]}>Estimasi Penjualan</Text>
+            <View style={[styles.inputContainer, styles.parameterInput, { backgroundColor: 'rgba(0,0,0,0.2)', borderColor: theme.border }]}>
               <TextInput
-                style={[styles.input, { color: theme.colors.text, textAlign: 'right' }]}
+                style={[styles.input, { color: theme.text, textAlign: 'right' }]}
                 value={estimatedSales}
                 onChangeText={setEstimatedSales}
                 keyboardType="numeric"
                 placeholder="100"
-                placeholderTextColor={theme.colors.textSecondary}
+                placeholderTextColor={theme.textSecondary}
                 keyboardAppearance="dark"
               />
-              <Text style={[styles.unit, { color: theme.colors.secondary }]}>unit/bln</Text>
+              <Text style={[styles.unit, { color: theme.secondary }]}>unit/bln</Text>
             </View>
           </View>
 
           <View style={styles.parameterRow}>
-            <Text style={[styles.parameterLabel, { color: theme.colors.textSecondary }]}>Diskon</Text>
-            <View style={[styles.inputContainer, styles.parameterInput, { backgroundColor: 'rgba(0,0,0,0.2)', borderColor: theme.colors.border }]}>
+            <Text style={[styles.parameterLabel, { color: theme.textSecondary }]}>Diskon</Text>
+            <View style={[styles.inputContainer, styles.parameterInput, { backgroundColor: 'rgba(0,0,0,0.2)', borderColor: theme.border }]}>
               <TextInput
-                style={[styles.input, { color: theme.colors.text, textAlign: 'right' }]}
+                style={[styles.input, { color: theme.text, textAlign: 'right' }]}
                 value={discount}
                 onChangeText={setDiscount}
                 keyboardType="numeric"
                 placeholder="0"
-                placeholderTextColor={theme.colors.textSecondary}
+                placeholderTextColor={theme.textSecondary}
                 keyboardAppearance="dark"
               />
-              <Text style={[styles.unit, { color: theme.colors.accent }]}>%</Text>
+              <Text style={[styles.unit, { color: theme.accent }]}>%</Text>
             </View>
           </View>
 
           <View style={styles.parameterRow}>
-            <Text style={[styles.parameterLabel, { color: theme.colors.textSecondary }]}>PPh (Pajak Penghasilan)</Text>
-            <View style={[styles.inputContainer, styles.parameterInput, { backgroundColor: 'rgba(0,0,0,0.2)', borderColor: theme.colors.border }]}>
+            <Text style={[styles.parameterLabel, { color: theme.textSecondary }]}>PPh (Pajak Penghasilan)</Text>
+            <View style={[styles.inputContainer, styles.parameterInput, { backgroundColor: 'rgba(0,0,0,0.2)', borderColor: theme.border }]}>
               <TextInput
-                style={[styles.input, { color: theme.colors.text, textAlign: 'right' }]}
+                style={[styles.input, { color: theme.text, textAlign: 'right' }]}
                 value={pph}
                 onChangeText={setPph}
                 keyboardType="numeric"
                 placeholder="0"
-                placeholderTextColor={theme.colors.textSecondary}
+                placeholderTextColor={theme.textSecondary}
                 keyboardAppearance="dark"
               />
-              <Text style={[styles.unit, { color: theme.colors.error }]}>%</Text>
+              <Text style={[styles.unit, { color: theme.error }]}>%</Text>
             </View>
           </View>
 
           <View style={styles.parameterRow}>
-            <Text style={[styles.parameterLabel, { color: theme.colors.textSecondary }]}>PPN (Pajak Pertambahan Nilai)</Text>
-            <View style={[styles.inputContainer, styles.parameterInput, { backgroundColor: 'rgba(0,0,0,0.2)', borderColor: theme.colors.border }]}>
+            <Text style={[styles.parameterLabel, { color: theme.textSecondary }]}>PPN (Pajak Pertambahan Nilai)</Text>
+            <View style={[styles.inputContainer, styles.parameterInput, { backgroundColor: 'rgba(0,0,0,0.2)', borderColor: theme.border }]}>
               <TextInput
-                style={[styles.input, { color: theme.colors.text, textAlign: 'right' }]}
+                style={[styles.input, { color: theme.text, textAlign: 'right' }]}
                 value={ppn}
                 onChangeText={setPpn}
                 keyboardType="numeric"
                 placeholder="0"
-                placeholderTextColor={theme.colors.textSecondary}
+                placeholderTextColor={theme.textSecondary}
                 keyboardAppearance="dark"
               />
-              <Text style={[styles.unit, { color: theme.colors.error }]}>%</Text>
+              <Text style={[styles.unit, { color: theme.error }]}>%</Text>
             </View>
           </View>
         </Animated.View>
 
         {/* Hasil Perhitungan */}
-        <Animated.View entering={SlideInRight.delay(400).duration(300)} style={[styles.resultCard, { backgroundColor: theme.colors.surfaceDark, borderColor: theme.colors.primary }]}>
+        <Animated.View entering={SlideInRight.delay(400).duration(300)} style={[styles.resultCard, { backgroundColor: theme.surfaceDark, borderColor: theme.primary }]}>
           <View style={styles.resultHeader}>
-            <MaterialIcons name="assessment" size={28} color={theme.colors.primary} />
-            <Text style={[styles.resultTitle, { color: theme.colors.text }]}>Hasil Perhitungan</Text>
+            <MaterialIcons name="assessment" size={28} color={theme.primary} />
+            <Text style={[styles.resultTitle, { color: theme.text }]}>Hasil Perhitungan</Text>
           </View>
           
           <View style={styles.resultDivider} />
           
           <View style={styles.resultRow}>
             <View style={styles.resultLabelContainer}>
-              <MaterialIcons name="attach-money" size={20} color={theme.colors.secondary} />
-              <Text style={[styles.resultLabel, { color: theme.colors.textSecondary }]}>BPP per Unit</Text>
+              <MaterialIcons name="attach-money" size={20} color={theme.secondary} />
+              <Text style={[styles.resultLabel, { color: theme.textSecondary }]}>BPP per Unit</Text>
             </View>
-            <Text style={[styles.resultValue, { color: theme.colors.secondary }]}>
+            <Text style={[styles.resultValue, { color: theme.secondary }]}>
               {bpp > 0 ? `Rp ${Math.round(bpp).toLocaleString('id-ID')}` : '-'}
             </Text>
           </View>
           
           {bpp > 0 && (
             <View style={[styles.explanationBox, { backgroundColor: 'rgba(52, 211, 153, 0.1)', borderColor: 'rgba(52, 211, 153, 0.3)' }]}>
-              <MaterialIcons name="info-outline" size={16} color={theme.colors.secondary} style={{ marginRight: 8 }} />
+              <MaterialIcons name="info-outline" size={16} color={theme.secondary} style={{ marginRight: 8 }} />
               <View style={{ flex: 1 }}>
-                <Text style={[styles.explanationText, { fontWeight: 700, color: theme.colors.text }]}>
+                <Text style={[styles.explanationText, { fontWeight: 700, color: theme.text }]}>
                   BPP (Biaya Pokok Produksi)
                 </Text>
-                <Text style={[styles.explanationText, { color: theme.colors.textSecondary, marginTop: 4 }]}>
+                <Text style={[styles.explanationText, { color: theme.textSecondary, marginTop: 4 }]}>
                   adalah total biaya untuk membuat 1 produk. Harga jual Anda harus lebih tinggi dari BPP agar mendapat untung.
                 </Text>
               </View>
@@ -538,22 +520,22 @@ export default function DetailPage() {
           
           <View style={styles.resultRow}>
             <View style={styles.resultLabelContainer}>
-              <MaterialIcons name="sell" size={20} color={theme.colors.primary} />
-              <Text style={[styles.resultLabel, { color: theme.colors.textSecondary }]}>Harga Jual</Text>
+              <MaterialIcons name="sell" size={20} color={theme.primary} />
+              <Text style={[styles.resultLabel, { color: theme.textSecondary }]}>Harga Jual</Text>
             </View>
-            <Text style={[styles.resultValue, { color: theme.colors.primary, fontSize: 24 }]}>
+            <Text style={[styles.resultValue, { color: theme.primary, fontSize: 24 }]}>
               {sellingPrice > 0 ? `Rp ${Math.round(sellingPrice).toLocaleString('id-ID')}` : '-'}
             </Text>
           </View>
           
           {sellingPrice > 0 && (
             <View style={[styles.explanationBox, { backgroundColor: 'rgba(167, 139, 250, 0.1)', borderColor: 'rgba(167, 139, 250, 0.3)' }]}>
-              <MaterialIcons name="info-outline" size={16} color={theme.colors.primary} style={{ marginRight: 8 }} />
+              <MaterialIcons name="info-outline" size={16} color={theme.primary} style={{ marginRight: 8 }} />
               <View style={{ flex: 1 }}>
-                <Text style={[styles.explanationText, { fontWeight: 700, color: theme.colors.text }]}>
+                <Text style={[styles.explanationText, { fontWeight: 700, color: theme.text }]}>
                   Harga Jual Optimal
                 </Text>
-                <Text style={[styles.explanationText, { color: theme.colors.textSecondary, marginTop: 4 }]}>
+                <Text style={[styles.explanationText, { color: theme.textSecondary, marginTop: 4 }]}>
                   sudah termasuk margin keuntungan yang Anda tetapkan. Ini adalah harga minimum yang disarankan untuk dijual.
                 </Text>
               </View>
@@ -563,10 +545,10 @@ export default function DetailPage() {
           {discount && Number(discount) > 0 && (
             <View style={styles.resultRow}>
               <View style={styles.resultLabelContainer}>
-                <MaterialIcons name="local-offer" size={20} color={theme.colors.accent} />
-                <Text style={[styles.resultLabel, { color: theme.colors.textSecondary }]}>Harga Setelah Diskon ({discount}%)</Text>
+                <MaterialIcons name="local-offer" size={20} color={theme.accent} />
+                <Text style={[styles.resultLabel, { color: theme.textSecondary }]}>Harga Setelah Diskon ({discount}%)</Text>
               </View>
-              <Text style={[styles.resultValue, { color: theme.colors.accent }]}>
+              <Text style={[styles.resultValue, { color: theme.accent }]}>
                 {sellingPriceAfterDiscount > 0 ? `Rp ${Math.round(sellingPriceAfterDiscount).toLocaleString('id-ID')}` : '-'}
               </Text>
             </View>
@@ -575,10 +557,10 @@ export default function DetailPage() {
           {((pph && Number(pph) > 0) || (ppn && Number(ppn) > 0)) && (
             <View style={styles.resultRow}>
               <View style={styles.resultLabelContainer}>
-                <MaterialIcons name="receipt-long" size={20} color={theme.colors.error} />
-                <Text style={[styles.resultLabel, { color: theme.colors.textSecondary }]}>Harga Final + Pajak</Text>
+                <MaterialIcons name="receipt-long" size={20} color={theme.error} />
+                <Text style={[styles.resultLabel, { color: theme.textSecondary }]}>Harga Final + Pajak</Text>
               </View>
-              <Text style={[styles.resultValue, { color: theme.colors.primary, fontSize: 24, fontWeight: 'bold' }]}>
+              <Text style={[styles.resultValue, { color: theme.primary, fontSize: 24, fontWeight: 'bold' }]}>
                 {sellingPriceAfterTax > 0 ? `Rp ${Math.round(sellingPriceAfterTax).toLocaleString('id-ID')}` : '-'}
               </Text>
             </View>
@@ -586,10 +568,10 @@ export default function DetailPage() {
           
           <View style={styles.resultRow}>
             <View style={styles.resultLabelContainer}>
-              <MaterialIcons name="trending-up" size={20} color={theme.colors.accent} />
-              <Text style={[styles.resultLabel, { color: theme.colors.textSecondary }]}>Break-even Point</Text>
+              <MaterialIcons name="trending-up" size={20} color={theme.accent} />
+              <Text style={[styles.resultLabel, { color: theme.textSecondary }]}>Break-even Point</Text>
             </View>
-            <Text style={[styles.resultValue, { color: theme.colors.accent }]}>
+            <Text style={[styles.resultValue, { color: theme.accent }]}>
               {estimatedSales && bpp && sellingPrice ? 
                 `${Math.round((totalFixedCost) / (sellingPrice - bpp))} unit` : '-'}
             </Text>
@@ -597,12 +579,12 @@ export default function DetailPage() {
           
           {estimatedSales && bpp && sellingPrice && (
             <View style={[styles.explanationBox, { backgroundColor: 'rgba(244, 114, 182, 0.1)', borderColor: 'rgba(244, 114, 182, 0.3)' }]}>
-              <MaterialIcons name="info-outline" size={16} color={theme.colors.accent} style={{ marginRight: 8 }} />
+              <MaterialIcons name="info-outline" size={16} color={theme.accent} style={{ marginRight: 8 }} />
               <View style={{ flex: 1 }}>
-                <Text style={[styles.explanationText, { fontWeight: 700, color: theme.colors.text }]}>
+                <Text style={[styles.explanationText, { fontWeight: 700, color: theme.text }]}>
                   Break-even Point
                 </Text>
-                <Text style={[styles.explanationText, { color: theme.colors.textSecondary, marginTop: 4 }]}>
+                <Text style={[styles.explanationText, { color: theme.textSecondary, marginTop: 4 }]}>
                   adalah jumlah unit yang harus terjual agar total pendapatan sama dengan total biaya (tidak untung, tidak rugi).
                 </Text>
               </View>
@@ -616,7 +598,7 @@ export default function DetailPage() {
           style={[
             styles.saveButtonMain, 
             { 
-              backgroundColor: hasChanges ? theme.colors.primary : theme.colors.surface,
+              backgroundColor: hasChanges ? theme.primary : theme.surface,
               opacity: hasChanges ? 1 : 0.5,
             }
           ]}
@@ -654,24 +636,24 @@ export default function DetailPage() {
               
               <View style={styles.modalContent}>
                 <View style={[styles.modalIconContainer, { backgroundColor: 'rgba(167, 139, 250, 0.15)' }]}>
-                  <MaterialIcons name="account-balance-wallet" size={32} color={theme.colors.primary} />
+                  <MaterialIcons name="account-balance-wallet" size={32} color={theme.primary} />
                 </View>
                 
-                <Text style={[styles.modalTitle, { color: theme.colors.text }]}>Tambah Biaya Tetap</Text>
-                <Text style={[styles.modalSubtitle, { color: theme.colors.textSecondary }]}>
+                <Text style={[styles.modalTitle, { color: theme.text }]}>Tambah Biaya Tetap</Text>
+                <Text style={[styles.modalSubtitle, { color: theme.textSecondary }]}>
                   Biaya yang jumlahnya tetap setiap bulan
                 </Text>
                 
                 {/* Nama Input */}
                 <View style={styles.inputWrapper}>
-                  <Text style={[styles.inputLabel, { color: theme.colors.textSecondary }]}>Nama Biaya</Text>
-                  <Text style={[styles.helperText, { color: theme.colors.outline, marginBottom: 8 }]}>Contoh: Sewa tempat, listrik, gaji karyawan, dsb</Text>
+                  <Text style={[styles.inputLabel, { color: theme.textSecondary }]}>Nama Biaya</Text>
+                  <Text style={[styles.helperText, { color: theme.outline, marginBottom: 8 }]}>Contoh: Sewa tempat, listrik, gaji karyawan, dsb</Text>
                   <View style={[styles.inputContainer, { backgroundColor: 'rgba(255, 255, 255, 0.05)', borderColor: 'rgba(255, 255, 255, 0.15)' }]}>
-                    <MaterialIcons name="label" size={20} color={theme.colors.outline} style={styles.inputIcon} />
+                    <MaterialIcons name="label" size={20} color={theme.outline} style={styles.inputIcon} />
                     <TextInput
-                      style={[styles.modalInput, { color: theme.colors.text }]}
+                      style={[styles.modalInput, { color: theme.text }]}
                       placeholder=""
-                      placeholderTextColor={theme.colors.outline}
+                      placeholderTextColor={theme.outline}
                       value={tempFixedCostName}
                       onChangeText={setTempFixedCostName}
                       autoFocus
@@ -682,14 +664,14 @@ export default function DetailPage() {
                 
                 {/* Amount Input with Quick Buttons */}
                 <View style={styles.inputWrapper}>
-                  <Text style={[styles.inputLabel, { color: theme.colors.textSecondary }]}>Jumlah (Rp)</Text>
-                  <Text style={[styles.helperText, { color: theme.colors.outline, marginBottom: 8 }]}>Masukkan nominal atau gunakan tombol cepat di bawah</Text>
+                  <Text style={[styles.inputLabel, { color: theme.textSecondary }]}>Jumlah (Rp)</Text>
+                  <Text style={[styles.helperText, { color: theme.outline, marginBottom: 8 }]}>Masukkan nominal atau gunakan tombol cepat di bawah</Text>
                   <View style={[styles.inputContainer, { backgroundColor: 'rgba(255, 255, 255, 0.05)', borderColor: 'rgba(255, 255, 255, 0.15)' }]}>
-                    <Text style={[styles.currency, { color: theme.colors.textSecondary }]}>Rp</Text>
+                    <Text style={[styles.currency, { color: theme.textSecondary }]}>Rp</Text>
                     <TextInput
-                      style={[styles.modalInput, { color: theme.colors.text }]}
+                      style={[styles.modalInput, { color: theme.text }]}
                       placeholder=""
-                      placeholderTextColor={theme.colors.outline}
+                      placeholderTextColor={theme.outline}
                       value={tempFixedCostAmount}
                       onChangeText={(text) => {
                         const formatted = formatCurrencyInput(text);
@@ -703,40 +685,40 @@ export default function DetailPage() {
                   {/* Quick Amount Buttons */}
                   <View style={styles.quickButtonsRow}>
                     <TouchableOpacity
-                      style={[styles.quickButton, { backgroundColor: 'rgba(239, 68, 68, 0.15)', borderColor: theme.colors.error }]}
+                      style={[styles.quickButton, { backgroundColor: 'rgba(239, 68, 68, 0.15)', borderColor: theme.error }]}
                       onPress={() => {
                         const current = parseCurrency(tempFixedCostAmount);
                         setTempFixedCostAmount(formatCurrency(Math.max(0, current - 10000)));
                       }}
                     >
-                      <Text style={[styles.quickButtonText, { color: theme.colors.error }]}>-10K</Text>
+                      <Text style={[styles.quickButtonText, { color: theme.error }]}>-10K</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
-                      style={[styles.quickButton, { backgroundColor: 'rgba(239, 68, 68, 0.15)', borderColor: theme.colors.error }]}
+                      style={[styles.quickButton, { backgroundColor: 'rgba(239, 68, 68, 0.15)', borderColor: theme.error }]}
                       onPress={() => {
                         const current = parseCurrency(tempFixedCostAmount);
                         setTempFixedCostAmount(formatCurrency(Math.max(0, current - 1000)));
                       }}
                     >
-                      <Text style={[styles.quickButtonText, { color: theme.colors.error }]}>-1K</Text>
+                      <Text style={[styles.quickButtonText, { color: theme.error }]}>-1K</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
-                      style={[styles.quickButton, { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: theme.colors.success }]}
+                      style={[styles.quickButton, { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: theme.success }]}
                       onPress={() => {
                         const current = parseCurrency(tempFixedCostAmount);
                         setTempFixedCostAmount(formatCurrency(current + 1000));
                       }}
                     >
-                      <Text style={[styles.quickButtonText, { color: theme.colors.success }]}>+1K</Text>
+                      <Text style={[styles.quickButtonText, { color: theme.success }]}>+1K</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
-                      style={[styles.quickButton, { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: theme.colors.success }]}
+                      style={[styles.quickButton, { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: theme.success }]}
                       onPress={() => {
                         const current = parseCurrency(tempFixedCostAmount);
                         setTempFixedCostAmount(formatCurrency(current + 10000));
                       }}
                     >
-                      <Text style={[styles.quickButtonText, { color: theme.colors.success }]}>+10K</Text>
+                      <Text style={[styles.quickButtonText, { color: theme.success }]}>+10K</Text>
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -748,7 +730,7 @@ export default function DetailPage() {
                     style={[styles.modalButton, styles.cancelButton, { borderColor: 'rgba(255, 255, 255, 0.2)', backgroundColor: 'rgba(255, 255, 255, 0.05)' }]}
                     activeOpacity={0.7}
                   >
-                    <Text style={[styles.modalButtonText, { color: theme.colors.text }]}>Batal</Text>
+                    <Text style={[styles.modalButtonText, { color: theme.text }]}>Batal</Text>
                   </TouchableOpacity>
                   <TouchableOpacity 
                     onPress={saveFixedCost}
@@ -787,24 +769,24 @@ export default function DetailPage() {
               
               <View style={styles.modalContent}>
                 <View style={[styles.modalIconContainer, { backgroundColor: 'rgba(52, 211, 153, 0.15)' }]}>
-                  <MaterialIcons name="shopping-cart" size={32} color={theme.colors.secondary} />
+                  <MaterialIcons name="shopping-cart" size={32} color={theme.secondary} />
                 </View>
                 
-                <Text style={[styles.modalTitle, { color: theme.colors.text }]}>Tambah Biaya Variabel</Text>
-                <Text style={[styles.modalSubtitle, { color: theme.colors.textSecondary }]}>
+                <Text style={[styles.modalTitle, { color: theme.text }]}>Tambah Biaya Variabel</Text>
+                <Text style={[styles.modalSubtitle, { color: theme.textSecondary }]}>
                   Biaya yang berubah sesuai jumlah produksi
                 </Text>
                 
                 {/* Nama Input */}
                 <View style={styles.inputWrapper}>
-                  <Text style={[styles.inputLabel, { color: theme.colors.textSecondary }]}>Nama Bahan</Text>
-                  <Text style={[styles.helperText, { color: theme.colors.outline, marginBottom: 8 }]}>Contoh: Tepung terigu, gula pasir, kemasan plastik, dsb</Text>
+                  <Text style={[styles.inputLabel, { color: theme.textSecondary }]}>Nama Bahan</Text>
+                  <Text style={[styles.helperText, { color: theme.outline, marginBottom: 8 }]}>Contoh: Tepung terigu, gula pasir, kemasan plastik, dsb</Text>
                   <View style={[styles.inputContainer, { backgroundColor: 'rgba(255, 255, 255, 0.05)', borderColor: 'rgba(255, 255, 255, 0.15)' }]}>
-                    <MaterialIcons name="inventory" size={20} color={theme.colors.outline} style={styles.inputIcon} />
+                    <MaterialIcons name="inventory" size={20} color={theme.outline} style={styles.inputIcon} />
                     <TextInput
-                      style={[styles.modalInput, { color: theme.colors.text }]}
+                      style={[styles.modalInput, { color: theme.text }]}
                       placeholder=""
-                      placeholderTextColor={theme.colors.outline}
+                      placeholderTextColor={theme.outline}
                       value={tempVariableCostName}
                       onChangeText={setTempVariableCostName}
                       autoFocus
@@ -815,14 +797,14 @@ export default function DetailPage() {
                 
                 {/* Amount Input with Quick Buttons */}
                 <View style={styles.inputWrapper}>
-                  <Text style={[styles.inputLabel, { color: theme.colors.textSecondary }]}>Harga per Unit (Rp)</Text>
-                  <Text style={[styles.helperText, { color: theme.colors.outline, marginBottom: 8 }]}>Harga satuan bahan atau gunakan tombol cepat</Text>
+                  <Text style={[styles.inputLabel, { color: theme.textSecondary }]}>Harga per Unit (Rp)</Text>
+                  <Text style={[styles.helperText, { color: theme.outline, marginBottom: 8 }]}>Harga satuan bahan atau gunakan tombol cepat</Text>
                   <View style={[styles.inputContainer, { backgroundColor: 'rgba(255, 255, 255, 0.05)', borderColor: 'rgba(255, 255, 255, 0.15)' }]}>
-                    <Text style={[styles.currency, { color: theme.colors.textSecondary }]}>Rp</Text>
+                    <Text style={[styles.currency, { color: theme.textSecondary }]}>Rp</Text>
                     <TextInput
-                      style={[styles.modalInput, { color: theme.colors.text }]}
+                      style={[styles.modalInput, { color: theme.text }]}
                       placeholder=""
-                      placeholderTextColor={theme.colors.outline}
+                      placeholderTextColor={theme.outline}
                       value={tempVariableCostAmount}
                       onChangeText={(text) => {
                         const formatted = formatCurrencyInput(text);
@@ -836,54 +818,54 @@ export default function DetailPage() {
                   {/* Quick Amount Buttons for Variable Cost */}
                   <View style={styles.quickButtonsRow}>
                     <TouchableOpacity
-                      style={[styles.quickButton, { backgroundColor: 'rgba(239, 68, 68, 0.15)', borderColor: theme.colors.error }]}
+                      style={[styles.quickButton, { backgroundColor: 'rgba(239, 68, 68, 0.15)', borderColor: theme.error }]}
                       onPress={() => {
                         const current = parseCurrency(tempVariableCostAmount);
                         setTempVariableCostAmount(formatCurrency(Math.max(0, current - 5000)));
                       }}
                     >
-                      <Text style={[styles.quickButtonText, { color: theme.colors.error }]}>-5K</Text>
+                      <Text style={[styles.quickButtonText, { color: theme.error }]}>-5K</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
-                      style={[styles.quickButton, { backgroundColor: 'rgba(239, 68, 68, 0.15)', borderColor: theme.colors.error }]}
+                      style={[styles.quickButton, { backgroundColor: 'rgba(239, 68, 68, 0.15)', borderColor: theme.error }]}
                       onPress={() => {
                         const current = parseCurrency(tempVariableCostAmount);
                         setTempVariableCostAmount(formatCurrency(Math.max(0, current - 1000)));
                       }}
                     >
-                      <Text style={[styles.quickButtonText, { color: theme.colors.error }]}>-1K</Text>
+                      <Text style={[styles.quickButtonText, { color: theme.error }]}>-1K</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
-                      style={[styles.quickButton, { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: theme.colors.success }]}
+                      style={[styles.quickButton, { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: theme.success }]}
                       onPress={() => {
                         const current = parseCurrency(tempVariableCostAmount);
                         setTempVariableCostAmount(formatCurrency(current + 1000));
                       }}
                     >
-                      <Text style={[styles.quickButtonText, { color: theme.colors.success }]}>+1K</Text>
+                      <Text style={[styles.quickButtonText, { color: theme.success }]}>+1K</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
-                      style={[styles.quickButton, { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: theme.colors.success }]}
+                      style={[styles.quickButton, { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: theme.success }]}
                       onPress={() => {
                         const current = parseCurrency(tempVariableCostAmount);
                         setTempVariableCostAmount(formatCurrency(current + 5000));
                       }}
                     >
-                      <Text style={[styles.quickButtonText, { color: theme.colors.success }]}>+5K</Text>
+                      <Text style={[styles.quickButtonText, { color: theme.success }]}>+5K</Text>
                     </TouchableOpacity>
                   </View>
                 </View>
                 
                 {/* Quantity Input with Quick Buttons */}
                 <View style={styles.inputWrapper}>
-                  <Text style={[styles.inputLabel, { color: theme.colors.textSecondary }]}>Jumlah</Text>
-                  <Text style={[styles.helperText, { color: theme.colors.outline, marginBottom: 8 }]}>Jumlah yang dibutuhkan per produk</Text>
+                  <Text style={[styles.inputLabel, { color: theme.textSecondary }]}>Jumlah</Text>
+                  <Text style={[styles.helperText, { color: theme.outline, marginBottom: 8 }]}>Jumlah yang dibutuhkan per produk</Text>
                   <View style={[styles.inputContainer, { backgroundColor: 'rgba(255, 255, 255, 0.05)', borderColor: 'rgba(255, 255, 255, 0.15)' }]}>
-                    <MaterialIcons name="format-list-numbered" size={20} color={theme.colors.outline} style={styles.inputIcon} />
+                    <MaterialIcons name="format-list-numbered" size={20} color={theme.outline} style={styles.inputIcon} />
                     <TextInput
-                      style={[styles.modalInput, { color: theme.colors.text }]}
+                      style={[styles.modalInput, { color: theme.text }]}
                       placeholder=""
-                      placeholderTextColor={theme.colors.outline}
+                      placeholderTextColor={theme.outline}
                       value={tempVariableCostQuantity}
                       onChangeText={setTempVariableCostQuantity}
                       keyboardType="numeric"
@@ -894,40 +876,40 @@ export default function DetailPage() {
                   {/* Quick Quantity Buttons */}
                   <View style={styles.quickButtonsRow}>
                     <TouchableOpacity
-                      style={[styles.quickButton, { backgroundColor: 'rgba(239, 68, 68, 0.15)', borderColor: theme.colors.error }]}
+                      style={[styles.quickButton, { backgroundColor: 'rgba(239, 68, 68, 0.15)', borderColor: theme.error }]}
                       onPress={() => {
                         const current = Number(tempVariableCostQuantity) || 0;
                         setTempVariableCostQuantity(Math.max(0, current - 5).toString());
                       }}
                     >
-                      <Text style={[styles.quickButtonText, { color: theme.colors.error }]}>-5</Text>
+                      <Text style={[styles.quickButtonText, { color: theme.error }]}>-5</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
-                      style={[styles.quickButton, { backgroundColor: 'rgba(239, 68, 68, 0.15)', borderColor: theme.colors.error }]}
+                      style={[styles.quickButton, { backgroundColor: 'rgba(239, 68, 68, 0.15)', borderColor: theme.error }]}
                       onPress={() => {
                         const current = Number(tempVariableCostQuantity) || 0;
                         setTempVariableCostQuantity(Math.max(0, current - 1).toString());
                       }}
                     >
-                      <Text style={[styles.quickButtonText, { color: theme.colors.error }]}>-1</Text>
+                      <Text style={[styles.quickButtonText, { color: theme.error }]}>-1</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
-                      style={[styles.quickButton, { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: theme.colors.success }]}
+                      style={[styles.quickButton, { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: theme.success }]}
                       onPress={() => {
                         const current = Number(tempVariableCostQuantity) || 0;
                         setTempVariableCostQuantity((current + 1).toString());
                       }}
                     >
-                      <Text style={[styles.quickButtonText, { color: theme.colors.success }]}>+1</Text>
+                      <Text style={[styles.quickButtonText, { color: theme.success }]}>+1</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
-                      style={[styles.quickButton, { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: theme.colors.success }]}
+                      style={[styles.quickButton, { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: theme.success }]}
                       onPress={() => {
                         const current = Number(tempVariableCostQuantity) || 0;
                         setTempVariableCostQuantity((current + 5).toString());
                       }}
                     >
-                      <Text style={[styles.quickButtonText, { color: theme.colors.success }]}>+5</Text>
+                      <Text style={[styles.quickButtonText, { color: theme.success }]}>+5</Text>
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -939,7 +921,7 @@ export default function DetailPage() {
                     style={[styles.modalButton, styles.cancelButton, { borderColor: 'rgba(255, 255, 255, 0.2)', backgroundColor: 'rgba(255, 255, 255, 0.05)' }]}
                     activeOpacity={0.7}
                   >
-                    <Text style={[styles.modalButtonText, { color: theme.colors.text }]}>Batal</Text>
+                    <Text style={[styles.modalButtonText, { color: theme.text }]}>Batal</Text>
                   </TouchableOpacity>
                   <TouchableOpacity 
                     onPress={saveVariableCost}
@@ -1180,7 +1162,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     marginBottom: 16,
-    marginTop: -8,
+    marginTop: 8,
   },
   explanationText: {
     flex: 1,

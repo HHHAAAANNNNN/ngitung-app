@@ -1,4 +1,3 @@
-// app/(tabs)/result.tsx
 import { MaterialIcons } from '@expo/vector-icons';
 import * as Print from 'expo-print';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -8,28 +7,13 @@ import { Alert, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View }
 import Animated, { FadeIn, FadeInDown, SlideInRight } from 'react-native-reanimated';
 import Svg, { Circle } from 'react-native-svg';
 import { useNotes } from '../../src/context/NoteContext';
+import { useTheme } from '../../src/context/ThemeContext';
 
 export default function ResultPage() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { notes } = useNotes();
   const router = useRouter();
-  
-  const theme = {
-    colors: {
-      primary: '#A78BFA',
-      secondary: '#34D399',
-      accent: '#F472B6',
-      background: '#0F0A1F',
-      surface: 'rgba(255, 255, 255, 0.1)',
-      surfaceDark: 'rgba(30, 27, 75, 0.6)',
-      text: '#F9FAFB',
-      textSecondary: '#9CA3AF',
-      border: 'rgba(255, 255, 255, 0.2)',
-      error: '#EF4444',
-      success: '#10B981',
-      warning: '#F59E0B',
-    }
-  };
+  const { colors } = useTheme();
   
   // If no ID in params, try to use the first note with calculation data
   let note = id ? notes.find(n => n.id === id) : null;
@@ -45,11 +29,11 @@ export default function ResultPage() {
   // Check if we have a note with calculation data
   if (!note || !note.profitMargin || !note.estimatedSales) {
     return (
-      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.errorContainer}>
-          <MaterialIcons name="error-outline" size={64} color={theme.colors.error} />
-          <Text style={[styles.errorTitle, { color: theme.colors.text }]}>Belum Ada Data Perhitungan</Text>
-          <Text style={[styles.errorMessage, { color: theme.colors.textSecondary }]}>
+          <MaterialIcons name="error-outline" size={64} color={colors.error} />
+          <Text style={[styles.errorTitle, { color: colors.text }]}>Belum Ada Data Perhitungan</Text>
+          <Text style={[styles.errorMessage, { color: colors.textSecondary }]}>
             Silakan buat catatan baru dan isi data perhitungan terlebih dahulu
           </Text>
         </View>
@@ -113,7 +97,7 @@ export default function ResultPage() {
     const requiredSales = Math.ceil((totalFixedCost + targetProfitPerMonth) / (sellingPriceValue - bppValue));
     recommendations.push({
       icon: 'trending-up',
-      color: theme.colors.secondary,
+      color: colors.secondary,
       title: 'Target Penjualan Optimal',
       description: `Jual ${requiredSales} unit/bulan untuk raih keuntungan Rp ${(targetProfitPerMonth / 1000000).toFixed(1)} juta`,
     });
@@ -122,7 +106,7 @@ export default function ResultPage() {
     if (profitMargin < 30) {
       recommendations.push({
         icon: 'lightbulb-outline',
-        color: theme.colors.warning,
+        color: colors.accent,
         title: 'Tingkatkan Margin',
         description: `Margin saat ini ${profitMargin}%. Coba naikkan ke 30-40% dengan efisiensi biaya atau menaikkan harga`,
       });
@@ -132,7 +116,7 @@ export default function ResultPage() {
     const safetyMargin = breakEvenPoint * 1.3;
     recommendations.push({
       icon: 'warning',
-      color: theme.colors.error,
+      color: colors.error,
       title: 'Zona Aman',
       description: `Jangan jual di bawah ${Math.ceil(safetyMargin)} unit/bulan. Di bawah ${breakEvenPoint} unit = rugi!`,
     });
@@ -339,7 +323,7 @@ export default function ResultPage() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
         {/* Gradient Decorations */}
         <View style={[styles.gradientCircle1, { backgroundColor: 'rgba(167, 139, 250, 0.1)' }]} />
         <View style={[styles.gradientCircle2, { backgroundColor: 'rgba(244, 114, 182, 0.08)' }]} />
@@ -349,38 +333,38 @@ export default function ResultPage() {
         showsVerticalScrollIndicator={false}
       >
         {/* 1. RINGKASAN UTAMA */}
-        <Animated.View entering={FadeIn.duration(400)} style={[styles.mainSummary, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
-          <Text style={[styles.sectionLabel, { color: theme.colors.textSecondary }]}>HARGA JUAL OPTIMAL</Text>
-          <Text style={[styles.mainPrice, { color: isProfit ? theme.colors.success : theme.colors.error }]}>
+        <Animated.View entering={FadeIn.duration(400)} style={[styles.mainSummary, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>HARGA JUAL OPTIMAL</Text>
+          <Text style={[styles.mainPrice, { color: isProfit ? colors.success : colors.error }]}>
             {note.price}
           </Text>
           
           <View style={styles.marginIndicator}>
             <View style={styles.marginBar}>
-              <View style={[styles.marginFill, { width: `${Math.min(profitMargin, 100)}%`, backgroundColor: theme.colors.primary }]} />
+              <View style={[styles.marginFill, { width: `${Math.min(profitMargin, 100)}%`, backgroundColor: colors.primary }]} />
             </View>
-            <Text style={[styles.marginText, { color: theme.colors.text }]}>Margin {profitMargin}%</Text>
+            <Text style={[styles.marginText, { color: colors.text }]}>Margin {profitMargin}%</Text>
           </View>
           
-          <View style={[styles.bepCard, { backgroundColor: 'rgba(0,0,0,0.2)', borderColor: theme.colors.secondary }]}>
-            <MaterialIcons name="flag" size={24} color={theme.colors.secondary} />
+          <View style={[styles.bepCard, { backgroundColor: 'rgba(0,0,0,0.2)', borderColor: colors.secondary }]}>
+            <MaterialIcons name="flag" size={24} color={colors.secondary} />
             <View style={styles.bepContent}>
-              <Text style={[styles.bepLabel, { color: theme.colors.textSecondary }]}>Break-even Point</Text>
-              <Text style={[styles.bepText, { color: theme.colors.text }]}>
-                Anda perlu jual <Text style={{ color: theme.colors.secondary, fontWeight: 'bold' }}>{breakEvenPoint} unit/bulan</Text> untuk balik modal
+              <Text style={[styles.bepLabel, { color: colors.textSecondary }]}>Break-even Point</Text>
+              <Text style={[styles.bepText, { color: colors.text }]}>
+                Anda perlu jual <Text style={{ color: colors.secondary, fontWeight: 'bold' }}>{breakEvenPoint} unit/bulan</Text> untuk balik modal
               </Text>
             </View>
           </View>
         </Animated.View>
 
         {/* 2. KOMPOSISI BIAYA */}
-        <Animated.View entering={SlideInRight.delay(100).duration(300)} style={[styles.section, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
+        <Animated.View entering={SlideInRight.delay(100).duration(300)} style={[styles.section, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <TouchableOpacity onPress={() => setExpandedSection(expandedSection === 'costs' ? null : 'costs')} style={styles.sectionHeader}>
             <View style={styles.sectionHeaderLeft}>
-              <MaterialIcons name="pie-chart" size={24} color={theme.colors.accent} />
-              <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Komposisi Biaya</Text>
+              <MaterialIcons name="pie-chart" size={24} color={colors.accent} />
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Komposisi Biaya</Text>
             </View>
-            <MaterialIcons name={expandedSection === 'costs' ? 'expand-less' : 'expand-more'} size={24} color={theme.colors.textSecondary} />
+            <MaterialIcons name={expandedSection === 'costs' ? 'expand-less' : 'expand-more'} size={24} color={colors.textSecondary} />
           </TouchableOpacity>
           
           <View style={styles.pieChartContainer}>
@@ -391,7 +375,7 @@ export default function ResultPage() {
                 cy="50"
                 r="40"
                 fill="none"
-                stroke={theme.colors.secondary}
+                stroke={colors.secondary}
                 strokeWidth="20"
                 strokeDasharray={`${variableCostPercent * 2.513} ${100 * 2.513}`}
                 strokeDashoffset="0"
@@ -403,7 +387,7 @@ export default function ResultPage() {
                 cy="50"
                 r="40"
                 fill="none"
-                stroke={theme.colors.primary}
+                stroke={colors.primary}
                 strokeWidth="20"
                 strokeDasharray={`${fixedCostPercent * 2.513} ${100 * 2.513}`}
                 strokeDashoffset={`-${variableCostPercent * 2.513}`}
@@ -415,52 +399,52 @@ export default function ResultPage() {
           <View style={styles.costBreakdown}>
             <View style={styles.costRow}>
               <View style={styles.costLabel}>
-                <View style={[styles.colorDot, { backgroundColor: theme.colors.primary }]} />
-                <Text style={[styles.costText, { color: theme.colors.text }]}>Biaya Tetap ({fixedCostPercent.toFixed(1)}%)</Text>
+                <View style={[styles.colorDot, { backgroundColor: colors.primary }]} />
+                <Text style={[styles.costText, { color: colors.text }]}>Biaya Tetap ({fixedCostPercent.toFixed(1)}%)</Text>
               </View>
-              <Text style={[styles.costValue, { color: theme.colors.text }]}>Rp {totalFixedCost.toLocaleString('id-ID')}</Text>
+              <Text style={[styles.costValue, { color: colors.text }]}>Rp {totalFixedCost.toLocaleString('id-ID')}</Text>
             </View>
             <View style={styles.costRow}>
               <View style={styles.costLabel}>
-                <View style={[styles.colorDot, { backgroundColor: theme.colors.secondary }]} />
-                <Text style={[styles.costText, { color: theme.colors.text }]}>Biaya Variabel ({variableCostPercent.toFixed(1)}%)</Text>
+                <View style={[styles.colorDot, { backgroundColor: colors.secondary }]} />
+                <Text style={[styles.costText, { color: colors.text }]}>Biaya Variabel ({variableCostPercent.toFixed(1)}%)</Text>
               </View>
-              <Text style={[styles.costValue, { color: theme.colors.text }]}>Rp {(totalVariableCost * estimatedSales).toLocaleString('id-ID')}</Text>
+              <Text style={[styles.costValue, { color: colors.text }]}>Rp {(totalVariableCost * estimatedSales).toLocaleString('id-ID')}</Text>
             </View>
           </View>
           
           {expandedSection === 'costs' && (
             <Animated.View entering={FadeInDown.duration(300)} style={styles.costDetails}>
-              <View style={[styles.detailSection, { borderColor: theme.colors.border }]}>
-                <Text style={[styles.detailTitle, { color: theme.colors.primary }]}>Rincian Biaya Tetap</Text>
+              <View style={[styles.detailSection, { borderColor: colors.border }]}>
+                <Text style={[styles.detailTitle, { color: colors.primary }]}>Rincian Biaya Tetap</Text>
                 {fixedCosts.map((cost, index) => (
                   <View key={index} style={styles.detailRow}>
-                    <Text style={[styles.detailName, { color: theme.colors.textSecondary }]}>{cost.name}</Text>
-                    <Text style={[styles.detailAmount, { color: theme.colors.text }]}>Rp {cost.amount.toLocaleString('id-ID')}</Text>
+                    <Text style={[styles.detailName, { color: colors.textSecondary }]}>{cost.name}</Text>
+                    <Text style={[styles.detailAmount, { color: colors.text }]}>Rp {cost.amount.toLocaleString('id-ID')}</Text>
                   </View>
                 ))}
-                <View style={[styles.totalSeparator, { borderColor: theme.colors.border }]} />
+                <View style={[styles.totalSeparator, { borderColor: colors.border }]} />
                 <View style={styles.detailRow}>
-                  <Text style={[styles.detailName, { color: theme.colors.text, fontWeight: '700' }]}>Total Biaya Tetap</Text>
-                  <Text style={[styles.detailAmount, { color: theme.colors.primary, fontWeight: '700' }]}>Rp {totalFixedCost.toLocaleString('id-ID')}</Text>
+                  <Text style={[styles.detailName, { color: colors.text, fontWeight: '700' }]}>Total Biaya Tetap</Text>
+                  <Text style={[styles.detailAmount, { color: colors.primary, fontWeight: '700' }]}>Rp {totalFixedCost.toLocaleString('id-ID')}</Text>
                 </View>
               </View>
-              <View style={[styles.detailSection, { borderColor: theme.colors.border }]}>
-                <Text style={[styles.detailTitle, { color: theme.colors.secondary }]}>Rincian Biaya Variabel (per unit)</Text>
+              <View style={[styles.detailSection, { borderColor: colors.border }]}>
+                <Text style={[styles.detailTitle, { color: colors.secondary }]}>Rincian Biaya Variabel (per unit)</Text>
                 {variableCosts.map((cost, index) => (
                   <View key={index} style={styles.detailRow}>
-                    <Text style={[styles.detailName, { color: theme.colors.textSecondary }]}>{cost.name} (×{cost.quantity})</Text>
-                    <Text style={[styles.detailAmount, { color: theme.colors.text }]}>Rp {(cost.amount * cost.quantity).toLocaleString('id-ID')}</Text>
+                    <Text style={[styles.detailName, { color: colors.textSecondary }]}>{cost.name} (×{cost.quantity})</Text>
+                    <Text style={[styles.detailAmount, { color: colors.text }]}>Rp {(cost.amount * cost.quantity).toLocaleString('id-ID')}</Text>
                   </View>
                 ))}
-                <View style={[styles.totalSeparator, { borderColor: theme.colors.border }]} />
+                <View style={[styles.totalSeparator, { borderColor: colors.border }]} />
                 <View style={styles.detailRow}>
-                  <Text style={[styles.detailName, { color: theme.colors.text, fontWeight: '700' }]}>Total per Unit</Text>
-                  <Text style={[styles.detailAmount, { color: theme.colors.text, fontWeight: '700' }]}>Rp {totalVariableCost.toLocaleString('id-ID')}</Text>
+                  <Text style={[styles.detailName, { color: colors.text, fontWeight: '700' }]}>Total per Unit</Text>
+                  <Text style={[styles.detailAmount, { color: colors.text, fontWeight: '700' }]}>Rp {totalVariableCost.toLocaleString('id-ID')}</Text>
                 </View>
                 <View style={styles.detailRow}>
-                  <Text style={[styles.detailName, { color: theme.colors.text, fontWeight: '700' }]}>Total untuk {estimatedSales} unit</Text>
-                  <Text style={[styles.detailAmount, { color: theme.colors.secondary, fontWeight: '700', fontSize: 16 }]}>Rp {(totalVariableCost * estimatedSales).toLocaleString('id-ID')}</Text>
+                  <Text style={[styles.detailName, { color: colors.text, fontWeight: '700' }]}>Total untuk {estimatedSales} unit</Text>
+                  <Text style={[styles.detailAmount, { color: colors.secondary, fontWeight: '700', fontSize: 16 }]}>Rp {(totalVariableCost * estimatedSales).toLocaleString('id-ID')}</Text>
                 </View>
               </View>
             </Animated.View>
@@ -468,33 +452,33 @@ export default function ResultPage() {
         </Animated.View>
 
         {/* 3. SIMULASI RESIKO */}
-        <Animated.View entering={SlideInRight.delay(200).duration(300)} style={[styles.section, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
+        <Animated.View entering={SlideInRight.delay(200).duration(300)} style={[styles.section, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <View style={styles.sectionHeader}>
             <View style={styles.sectionHeaderLeft}>
-              <MaterialIcons name="science" size={24} color={theme.colors.warning} />
-              <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Simulasi Resiko</Text>
+              <MaterialIcons name="science" size={24} color={colors.accent} />
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Simulasi Resiko</Text>
             </View>
           </View>
           
           <TouchableOpacity 
             onPress={() => setSimulationMode(simulationMode === 'material' ? null : 'material')}
-            style={[styles.simulationCard, { backgroundColor: 'rgba(245, 158, 11, 0.1)', borderColor: theme.colors.warning }]}
+            style={[styles.simulationCard, { backgroundColor: 'rgba(245, 158, 11, 0.1)', borderColor: colors.accent }]}
           >
             <View style={styles.simulationHeader}>
-              <MaterialIcons name="trending-up" size={20} color={theme.colors.warning} />
-              <Text style={[styles.simulationTitle, { color: theme.colors.text }]}>Kenaikan Harga Bahan Baku +20%</Text>
+              <MaterialIcons name="trending-up" size={20} color={colors.accent} />
+              <Text style={[styles.simulationTitle, { color: colors.text }]}>Kenaikan Harga Bahan Baku +20%</Text>
             </View>
             {simulationMode === 'material' && (() => {
               const result = simulateMaterialIncrease(20);
               return (
                 <Animated.View entering={FadeInDown.duration(300)} style={styles.simulationResult}>
-                  <Text style={[styles.simulationText, { color: theme.colors.textSecondary }]}>
-                    BPP Baru: <Text style={{ color: theme.colors.text, fontWeight: 'bold' }}>Rp {Math.round(result.newBpp).toLocaleString('id-ID')}</Text>
+                  <Text style={[styles.simulationText, { color: colors.textSecondary }]}>
+                    BPP Baru: <Text style={{ color: colors.text, fontWeight: 'bold' }}>Rp {Math.round(result.newBpp).toLocaleString('id-ID')}</Text>
                   </Text>
-                  <Text style={[styles.simulationText, { color: theme.colors.textSecondary }]}>
-                    Harga Jual Baru: <Text style={{ color: theme.colors.text, fontWeight: 'bold' }}>Rp {Math.round(result.newSellingPrice).toLocaleString('id-ID')}</Text>
+                  <Text style={[styles.simulationText, { color: colors.textSecondary }]}>
+                    Harga Jual Baru: <Text style={{ color: colors.text, fontWeight: 'bold' }}>Rp {Math.round(result.newSellingPrice).toLocaleString('id-ID')}</Text>
                   </Text>
-                  <Text style={[styles.simulationText, { color: theme.colors.warning }]}>
+                  <Text style={[styles.simulationText, { color: colors.accent }]}>
                     ⚠️ Naikkan harga Rp {Math.round(result.priceIncrease).toLocaleString('id-ID')} atau margin turun!
                   </Text>
                 </Animated.View>
@@ -504,25 +488,25 @@ export default function ResultPage() {
           
           <TouchableOpacity 
             onPress={() => setSimulationMode(simulationMode === 'sales' ? null : 'sales')}
-            style={[styles.simulationCard, { backgroundColor: 'rgba(239, 68, 68, 0.1)', borderColor: theme.colors.error }]}
+            style={[styles.simulationCard, { backgroundColor: 'rgba(239, 68, 68, 0.1)', borderColor: colors.error }]}
           >
             <View style={styles.simulationHeader}>
-              <MaterialIcons name="trending-down" size={20} color={theme.colors.error} />
-              <Text style={[styles.simulationTitle, { color: theme.colors.text }]}>Penurunan Penjualan -30%</Text>
+              <MaterialIcons name="trending-down" size={20} color={colors.error} />
+              <Text style={[styles.simulationTitle, { color: colors.text }]}>Penurunan Penjualan -30%</Text>
             </View>
             {simulationMode === 'sales' && (() => {
               const result = simulateSalesDecrease(30);
               return (
                 <Animated.View entering={FadeInDown.duration(300)} style={styles.simulationResult}>
-                  <Text style={[styles.simulationText, { color: theme.colors.textSecondary }]}>
-                    Penjualan Baru: <Text style={{ color: theme.colors.text, fontWeight: 'bold' }}>{result.newSales} unit/bulan</Text>
+                  <Text style={[styles.simulationText, { color: colors.textSecondary }]}>
+                    Penjualan Baru: <Text style={{ color: colors.text, fontWeight: 'bold' }}>{result.newSales} unit/bulan</Text>
                   </Text>
-                  <Text style={[styles.simulationText, { color: theme.colors.textSecondary }]}>
-                    Keuntungan: <Text style={{ color: result.stillProfitable ? theme.colors.success : theme.colors.error, fontWeight: 'bold' }}>
+                  <Text style={[styles.simulationText, { color: colors.textSecondary }]}>
+                    Keuntungan: <Text style={{ color: result.stillProfitable ? colors.success : colors.error, fontWeight: 'bold' }}>
                       Rp {Math.round(result.newProfit).toLocaleString('id-ID')}
                     </Text>
                   </Text>
-                  <Text style={[styles.simulationText, { color: theme.colors.error }]}>
+                  <Text style={[styles.simulationText, { color: colors.error }]}>
                     {result.stillProfitable ? '✅ Masih untung, tapi tipis!' : '❌ Rugi! Perlu efisiensi biaya'}
                   </Text>
                 </Animated.View>
@@ -532,11 +516,11 @@ export default function ResultPage() {
         </Animated.View>
 
         {/* 4. REKOMENDASI AKSI */}
-        <Animated.View entering={SlideInRight.delay(300).duration(300)} style={[styles.section, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
+        <Animated.View entering={SlideInRight.delay(300).duration(300)} style={[styles.section, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <View style={styles.sectionHeader}>
             <View style={styles.sectionHeaderLeft}>
-              <MaterialIcons name="lightbulb" size={24} color={theme.colors.accent} />
-              <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Rekomendasi Aksi</Text>
+              <MaterialIcons name="lightbulb" size={24} color={colors.accent} />
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Rekomendasi Aksi</Text>
             </View>
           </View>
           
@@ -544,8 +528,8 @@ export default function ResultPage() {
             <View key={index} style={[styles.recommendationCard, { backgroundColor: 'rgba(0,0,0,0.2)', borderLeftColor: rec.color }]}>
               <MaterialIcons name={rec.icon as any} size={24} color={rec.color} />
               <View style={styles.recommendationContent}>
-                <Text style={[styles.recommendationTitle, { color: theme.colors.text }]}>{rec.title}</Text>
-                <Text style={[styles.recommendationDesc, { color: theme.colors.textSecondary }]}>{rec.description}</Text>
+                <Text style={[styles.recommendationTitle, { color: colors.text }]}>{rec.title}</Text>
+                <Text style={[styles.recommendationDesc, { color: colors.textSecondary }]}>{rec.description}</Text>
               </View>
             </View>
           ))}
@@ -554,7 +538,7 @@ export default function ResultPage() {
         {/* 5. EKSPOR PDF */}
         <TouchableOpacity 
           onPress={exportToPDF}
-          style={[styles.exportButton, { backgroundColor: theme.colors.primary }]}
+          style={[styles.exportButton, { backgroundColor: colors.primary }]}
         >
           <MaterialIcons name="picture-as-pdf" size={24} color="white" />
           <Text style={styles.exportButtonText}>Ekspor ke PDF</Text>
@@ -564,9 +548,9 @@ export default function ResultPage() {
       {/* Floating Back Button - Bottom Left */}
       <TouchableOpacity 
         onPress={() => router.back()}
-        style={[styles.floatingBackButton, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}
+        style={[styles.floatingBackButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
       >
-        <MaterialIcons name="arrow-back" size={24} color={theme.colors.text} />
+        <MaterialIcons name="arrow-back" size={24} color={colors.text} />
       </TouchableOpacity>
     </View>
   );

@@ -25,11 +25,11 @@ type ColorSchemeName = 'light' | 'dark' | null | undefined;
 // SUB-COMPONENTS
 // ======================
 
-const GradientBackground = ({ children }: { children: React.ReactNode }) => {
+const GradientBackground = ({ children, mode, colors }: { children: React.ReactNode, mode: string, colors: any }) => {
   return (
-    <View style={styles.background}>
-      <View style={styles.gradientTopLeft} />
-      <View style={styles.gradientBottomRight} />
+    <View style={[styles.background, { backgroundColor: colors.background }]}>
+      <View style={[styles.gradientTopLeft, { backgroundColor: mode === 'dark' ? 'rgba(167, 139, 250, 0.15)' : 'rgba(99, 102, 241, 0.1)' }]} />
+      <View style={[styles.gradientBottomRight, { backgroundColor: mode === 'dark' ? 'rgba(244, 114, 182, 0.12)' : 'rgba(236, 72, 153, 0.08)' }]} />
       {children}
     </View>
   );
@@ -154,7 +154,10 @@ export default function MainPage() {
       <Text style={[styles.emptyTitle, { color: theme.colors.onBackground }]}>{t.emptyTitle}</Text>
       <Text style={[styles.emptySubtitle, { color: theme.colors.outline }]}>{t.emptySubtitle}</Text>
       <TouchableOpacity 
-        style={styles.primaryButton}
+        style={[styles.primaryButton, {
+          backgroundColor: theme.colors.primary,
+          shadowColor: theme.colors.primary
+        }]}
         onPress={handleAddNote}
         activeOpacity={0.85}
       >
@@ -169,29 +172,39 @@ export default function MainPage() {
   // ======================
 
   return (
-    <GradientBackground>
+    <GradientBackground mode={mode} colors={themeColors}>
       <View style={styles.header}>
         {/* Help Button - Left */}
         <TouchableOpacity 
-          style={styles.helpButton} 
+          style={[styles.helpButton, { 
+            backgroundColor: mode === 'dark' ? 'rgba(167, 139, 250, 0.15)' : 'rgba(99, 102, 241, 0.15)',
+            borderColor: mode === 'dark' ? 'rgba(167, 139, 250, 0.3)' : 'rgba(99, 102, 241, 0.3)'
+          }]} 
           onPress={handleViewTutorial}
           activeOpacity={0.8}
         >
           <MaterialIcons name="help-outline" size={22} color={theme.colors.primary} />
         </TouchableOpacity>
 
-        {/* Theme Toggle - Right Top */}
+        {/* Theme Toggle - Next to Help Button */}
         <TouchableOpacity 
-          style={[styles.languageToggle, { top: 40, right: 80 }]} 
+          style={[styles.helpButton, { 
+            left: 70,
+            backgroundColor: mode === 'dark' ? 'rgba(167, 139, 250, 0.15)' : 'rgba(99, 102, 241, 0.15)',
+            borderColor: mode === 'dark' ? 'rgba(167, 139, 250, 0.3)' : 'rgba(99, 102, 241, 0.3)'
+          }]} 
           onPress={toggleTheme}
           activeOpacity={0.8}
         >
-          <MaterialIcons name={mode === 'dark' ? 'light-mode' : 'dark-mode'} size={20} color={theme.colors.primary} />
+          <MaterialIcons name={mode === 'dark' ? 'light-mode' : 'dark-mode'} size={22} color={theme.colors.primary} />
         </TouchableOpacity>
 
         {/* Language Toggle - Right */}
         <TouchableOpacity 
-          style={styles.languageToggle} 
+          style={[styles.languageToggle, {
+            backgroundColor: mode === 'dark' ? 'rgba(167, 139, 250, 0.15)' : 'rgba(99, 102, 241, 0.15)',
+            borderColor: mode === 'dark' ? 'rgba(167, 139, 250, 0.3)' : 'rgba(99, 102, 241, 0.3)'
+          }]} 
           onPress={() => setLanguage(language === 'id' ? 'en' : 'id')}
           activeOpacity={0.8}
         >
@@ -277,6 +290,7 @@ export default function MainPage() {
         colorScheme={colorScheme}
         theme={theme}
         t={t}
+        mode={mode}
       />
 
       <SettingsModal
@@ -288,6 +302,7 @@ export default function MainPage() {
         onDelete={handleDeleteNote}
         theme={theme}
         t={t}
+        mode={mode}
       />
     </GradientBackground>
   );
@@ -391,7 +406,7 @@ const NoteCard = React.memo(({ note, color, onPress, onSettings, theme, index, t
                 {t.saved} {getRelativeTime(new Date(note.updatedAt))}
               </Text>
             </View>
-            <View style={[styles.profitBadge, { backgroundColor: 'rgba(52, 211, 153, 0.15)' }]}>
+            <View style={[styles.profitBadge, { backgroundColor: theme.colors.secondary + '15' }]}>
               <MaterialIcons 
                 name="trending-up" 
                 size={14} 
@@ -415,6 +430,7 @@ interface AddNoteModalProps {
   colorScheme: ColorSchemeName;
   theme: any;
   t: any;
+  mode: string;
 }
 
 const AddNoteModal = React.memo(({ 
@@ -425,7 +441,8 @@ const AddNoteModal = React.memo(({
   onNoteNameChange,
   colorScheme,
   theme,
-  t
+  t,
+  mode
 }: AddNoteModalProps) => {
   const [isFocused, setIsFocused] = React.useState(false);
   
@@ -447,16 +464,16 @@ const AddNoteModal = React.memo(({
             style={[
               styles.modalContainer,
               { 
-                backgroundColor: '#1A1625',
+                backgroundColor: theme.colors.surface,
               }
             ]}>
             {/* Decorative gradient circles */}
-            <View style={[styles.modalGradient1, { backgroundColor: 'rgba(167, 139, 250, 0.3)' }]} />
-            <View style={[styles.modalGradient2, { backgroundColor: 'rgba(244, 114, 182, 0.2)' }]} />
+            <View style={[styles.modalGradient1, { backgroundColor: theme.colors.primary + '30' }]} />
+            <View style={[styles.modalGradient2, { backgroundColor: theme.colors.secondary + '20' }]} />
           
           <View style={styles.modalContent}>
             {/* Header Icon */}
-            <View style={[styles.modalIconContainer, { backgroundColor: 'rgba(167, 139, 250, 0.15)' }]}>
+            <View style={[styles.modalIconContainer, { backgroundColor: theme.colors.primary + '15' }]}>
               <MaterialIcons name="note-add" size={32} color={theme.colors.primary} />
             </View>
             
@@ -469,8 +486,8 @@ const AddNoteModal = React.memo(({
               <View style={[
                 styles.inputContainer,
                 { 
-                  borderColor: isFocused ? theme.colors.primary : 'rgba(255, 255, 255, 0.15)',
-                  backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                  borderColor: isFocused ? theme.colors.primary : theme.colors.border,
+                  backgroundColor: theme.colors.glass,
                 }
               ]}>
                 <MaterialIcons 
@@ -511,8 +528,8 @@ const AddNoteModal = React.memo(({
                   styles.modalButton, 
                   styles.cancelButton,
                   { 
-                    borderColor: 'rgba(255, 255, 255, 0.2)',
-                    backgroundColor: 'rgba(255, 255, 255, 0.05)' 
+                    borderColor: theme.colors.border,
+                    backgroundColor: theme.colors.glass 
                   }
                 ]}
                 activeOpacity={0.7}
@@ -525,6 +542,8 @@ const AddNoteModal = React.memo(({
                   styles.modalButton, 
                   styles.saveButton,
                   { 
+                    backgroundColor: theme.colors.primary,
+                    shadowColor: theme.colors.primary,
                     opacity: !noteName.trim() ? 0.5 : 1 
                   }
                 ]}
@@ -552,6 +571,7 @@ interface SettingsModalProps {
   onDelete: () => void;
   theme: any;
   t: any;
+  mode: string;
 }
 
 const SettingsModal = React.memo(({
@@ -562,7 +582,8 @@ const SettingsModal = React.memo(({
   onColorChange,
   onDelete,
   theme,
-  t
+  t,
+  mode
 }: SettingsModalProps) => {
   if (!note) return null;
 
@@ -579,7 +600,7 @@ const SettingsModal = React.memo(({
           style={[
             styles.settingsModalContainer,
             {
-              backgroundColor: '#1A1625',
+              backgroundColor: theme.colors.surface,
             }
           ]}>
           <View style={styles.modalContent}>
@@ -620,7 +641,7 @@ const SettingsModal = React.memo(({
             {/* Delete Button */}
             <TouchableOpacity
               onPress={onDelete}
-              style={[styles.deleteNoteButton, { backgroundColor: 'rgba(239, 68, 68, 0.15)', borderColor: theme.colors.error }]}
+              style={[styles.deleteNoteButton, { backgroundColor: theme.colors.error + '15', borderColor: theme.colors.error }]}
               activeOpacity={0.7}
             >
               <MaterialIcons name="delete-outline" size={24} color={theme.colors.error} />
@@ -630,7 +651,7 @@ const SettingsModal = React.memo(({
             {/* Close Button */}
             <TouchableOpacity
               onPress={onClose}
-              style={[styles.modalButton, styles.cancelButton, { borderColor: 'rgba(255, 255, 255, 0.2)', backgroundColor: 'rgba(255, 255, 255, 0.05)' }]}
+              style={[styles.modalButton, styles.cancelButton, { borderColor: theme.colors.border, backgroundColor: theme.colors.glass }]}
               activeOpacity={0.7}
             >
               <Text style={[styles.modalButtonText, { color: theme.colors.text }]}>{t.close}</Text>
@@ -657,7 +678,6 @@ const styles = StyleSheet.create({
   },
   background: {
     flex: 1,
-    backgroundColor: '#0F0A1F',
   },
   gradientTopLeft: {
     position: 'absolute',
@@ -665,7 +685,6 @@ const styles = StyleSheet.create({
     left: -100,
     width: 300,
     height: 300,
-    backgroundColor: 'rgba(167, 139, 250, 0.15)',
     borderRadius: 200,
   },
   gradientBottomRight: {
@@ -674,7 +693,6 @@ const styles = StyleSheet.create({
     right: -100,
     width: 350,
     height: 350,
-    backgroundColor: 'rgba(244, 114, 182, 0.12)',
     borderRadius: 200,
   },
   header: {
@@ -690,11 +708,9 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(167, 139, 250, 0.15)',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(167, 139, 250, 0.3)',
     zIndex: 10,
   },
   languageToggle: {
@@ -703,12 +719,10 @@ const styles = StyleSheet.create({
     right: 20,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(167, 139, 250, 0.15)',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(167, 139, 250, 0.3)',
     zIndex: 10,
   },
   languageText: {
@@ -974,8 +988,6 @@ const styles = StyleSheet.create({
     borderWidth: 2,
   },
   saveButton: {
-    backgroundColor: '#A78BFA',
-    shadowColor: '#A78BFA',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.4,
     shadowRadius: 12,
@@ -987,7 +999,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(244, 114, 182, 0.2)',
+    backgroundColor: 'rgba(244, 114, 182, 0.15)',
   },
   modalButtonText: {
     fontSize: 16,
@@ -1022,8 +1034,6 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 26,
     borderRadius: 16,
-    backgroundColor: '#A78BFA',
-    shadowColor: '#A78BFA',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
