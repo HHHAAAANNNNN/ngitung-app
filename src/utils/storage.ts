@@ -12,6 +12,9 @@ export interface Note {
   variableCosts?: { id: string; name: string; amount: number; quantity: number }[];
   profitMargin?: number;
   estimatedSales?: number;
+  discount?: number;
+  pph?: number;
+  ppn?: number;
   updatedAt: number; // Unix timestamp
 }
 

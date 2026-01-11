@@ -3,7 +3,8 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import Animated, { FadeIn, FadeInDown, FadeOutUp, SlideInRight, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import Animated, { FadeIn, FadeInDown, FadeOutUp, runOnJS, SlideInRight, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useNotes } from '../../../src/context/NoteContext';
 
 export default function DetailPage() {
@@ -52,8 +53,13 @@ export default function DetailPage() {
   const [variableCosts, setVariableCosts] = useState<{ id: string; name: string; amount: number | null; quantity: number | null }[]>(note.variableCosts || []);
   const [profitMargin, setProfitMargin] = useState(note.profitMargin?.toString() || '');
   const [estimatedSales, setEstimatedSales] = useState(note.estimatedSales?.toString() || '');
+  const [discount, setDiscount] = useState(note.discount?.toString() || '0');
+  const [pph, setPph] = useState(note.pph?.toString() || '0');
+  const [ppn, setPpn] = useState(note.ppn?.toString() || '0');
   const [bpp, setBpp] = useState(0);
   const [sellingPrice, setSellingPrice] = useState(0);
+  const [sellingPriceAfterDiscount, setSellingPriceAfterDiscount] = useState(0);
+  const [sellingPriceAfterTax, setSellingPriceAfterTax] = useState(0);
   const [totalFixedCost, setTotalFixedCost] = useState(0);
   const [hasChanges, setHasChanges] = useState(false);
   const [showNotification, setShowNotification] = useState(false);
@@ -86,19 +92,33 @@ export default function DetailPage() {
     // Hitung total biaya tetap per bulan
     const totalFixed = fixedCosts.reduce((sum, cost) => sum + (cost.amount ?? 0), 0);
     setTotalFixedCost(totalFixed);
+    
     // Hitung total biaya variabel per unit
     const totalVariableCost = variableCosts.reduce((sum, cost) => {
       const amount = cost.amount ?? 0;
       const quantity = cost.quantity ?? 0;
       return sum + (amount * quantity);
     }, 0);
+    
     // Hitung BPP
     const bppValue = totalVariableCost + (estimatedSales ? (totalFixed / Number(estimatedSales)) : 0);
     setBpp(bppValue);
+    
     // Hitung harga jual dengan margin keuntungan
     const profit = profitMargin ? Number(profitMargin) / 100 : 0.3;
     const sellingPriceValue = bppValue * (1 + profit);
     setSellingPrice(sellingPriceValue);
+    
+    // Hitung harga setelah diskon
+    const discountPercent = discount ? Number(discount) / 100 : 0;
+    const priceAfterDiscount = sellingPriceValue * (1 - discountPercent);
+    setSellingPriceAfterDiscount(priceAfterDiscount);
+    
+    // Hitung harga setelah pajak
+    const pphPercent = pph ? Number(pph) / 100 : 0;
+    const ppnPercent = ppn ? Number(ppn) / 100 : 0;
+    const priceAfterTax = priceAfterDiscount * (1 + pphPercent + ppnPercent);
+    setSellingPriceAfterTax(priceAfterTax);
   };
 
   // Simpan perhitungan ke database
@@ -112,12 +132,15 @@ export default function DetailPage() {
     try {
       const updatedNote = {
         ...note,
-        price: `Rp ${Math.round(sellingPrice).toLocaleString('id-ID')}`,
+        price: `Rp ${Math.round(sellingPriceAfterTax || sellingPrice).toLocaleString('id-ID')}`,
         bpp: `Rp ${Math.round(bpp).toLocaleString('id-ID')}`,
         fixedCosts: fixedCosts.map(c => ({ ...c, amount: c.amount || 0 })),
         variableCosts: variableCosts.map(c => ({ ...c, amount: c.amount || 0, quantity: c.quantity || 0 })),
         profitMargin: Number(profitMargin),
         estimatedSales: Number(estimatedSales),
+        discount: Number(discount) || 0,
+        pph: Number(pph) || 0,
+        ppn: Number(ppn) || 0,
       };
       await updateNote(updatedNote);
       setHasChanges(false);
@@ -138,7 +161,7 @@ export default function DetailPage() {
   // Hitung otomatis saat ada perubahan input
   useEffect(() => {
     calculate();
-  }, [fixedCosts, variableCosts, profitMargin, estimatedSales]);
+  }, [fixedCosts, variableCosts, profitMargin, estimatedSales, discount, pph, ppn]);
 
   // Notification Toast Component
   const NotificationToast = () => {
@@ -175,17 +198,30 @@ export default function DetailPage() {
     );
   };
 
+  // Swipe gesture to navigate to result page
+  const handleSwipeLeft = () => {
+    router.push('/(tabs)/result');
+  };
+
+  const swipeGesture = Gesture.Pan()
+    .onEnd((event) => {
+      if (event.translationX < -100 && Math.abs(event.velocityX) > 500) {
+        runOnJS(handleSwipeLeft)();
+      }
+    });
+
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      {/* Gradient Decorations */}
-      <View style={[styles.gradientCircle1, { backgroundColor: 'rgba(167, 139, 250, 0.1)' }]} />
-      <View style={[styles.gradientCircle2, { backgroundColor: 'rgba(244, 114, 182, 0.08)' }]} />
-      
-      {/* Floating Back Button */}
-      <TouchableOpacity 
-        onPress={() => router.back()}
-        style={[styles.floatingBackButton, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}
-      >
+    <GestureDetector gesture={swipeGesture}>
+      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+        {/* Gradient Decorations */}
+        <View style={[styles.gradientCircle1, { backgroundColor: 'rgba(167, 139, 250, 0.1)' }]} />
+        <View style={[styles.gradientCircle2, { backgroundColor: 'rgba(244, 114, 182, 0.08)' }]} />
+        
+        {/* Floating Back Button */}
+        <TouchableOpacity 
+          onPress={() => router.back()}
+          style={[styles.floatingBackButton, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}
+        >
         <MaterialIcons name="arrow-back" size={24} color={theme.colors.text} />
       </TouchableOpacity>
       
@@ -385,6 +421,54 @@ export default function DetailPage() {
               <Text style={[styles.unit, { color: theme.colors.secondary }]}>unit/bln</Text>
             </View>
           </View>
+
+          <View style={styles.parameterRow}>
+            <Text style={[styles.parameterLabel, { color: theme.colors.textSecondary }]}>Diskon</Text>
+            <View style={[styles.inputContainer, styles.parameterInput, { backgroundColor: 'rgba(0,0,0,0.2)', borderColor: theme.colors.border }]}>
+              <TextInput
+                style={[styles.input, { color: theme.colors.text, textAlign: 'right' }]}
+                value={discount}
+                onChangeText={setDiscount}
+                keyboardType="numeric"
+                placeholder="0"
+                placeholderTextColor={theme.colors.textSecondary}
+                keyboardAppearance="dark"
+              />
+              <Text style={[styles.unit, { color: theme.colors.accent }]}>%</Text>
+            </View>
+          </View>
+
+          <View style={styles.parameterRow}>
+            <Text style={[styles.parameterLabel, { color: theme.colors.textSecondary }]}>PPh (Pajak Penghasilan)</Text>
+            <View style={[styles.inputContainer, styles.parameterInput, { backgroundColor: 'rgba(0,0,0,0.2)', borderColor: theme.colors.border }]}>
+              <TextInput
+                style={[styles.input, { color: theme.colors.text, textAlign: 'right' }]}
+                value={pph}
+                onChangeText={setPph}
+                keyboardType="numeric"
+                placeholder="0"
+                placeholderTextColor={theme.colors.textSecondary}
+                keyboardAppearance="dark"
+              />
+              <Text style={[styles.unit, { color: theme.colors.error }]}>%</Text>
+            </View>
+          </View>
+
+          <View style={styles.parameterRow}>
+            <Text style={[styles.parameterLabel, { color: theme.colors.textSecondary }]}>PPN (Pajak Pertambahan Nilai)</Text>
+            <View style={[styles.inputContainer, styles.parameterInput, { backgroundColor: 'rgba(0,0,0,0.2)', borderColor: theme.colors.border }]}>
+              <TextInput
+                style={[styles.input, { color: theme.colors.text, textAlign: 'right' }]}
+                value={ppn}
+                onChangeText={setPpn}
+                keyboardType="numeric"
+                placeholder="0"
+                placeholderTextColor={theme.colors.textSecondary}
+                keyboardAppearance="dark"
+              />
+              <Text style={[styles.unit, { color: theme.colors.error }]}>%</Text>
+            </View>
+          </View>
         </Animated.View>
 
         {/* Hasil Perhitungan */}
@@ -415,6 +499,30 @@ export default function DetailPage() {
               {sellingPrice > 0 ? `Rp ${Math.round(sellingPrice).toLocaleString('id-ID')}` : '-'}
             </Text>
           </View>
+
+          {discount && Number(discount) > 0 && (
+            <View style={styles.resultRow}>
+              <View style={styles.resultLabelContainer}>
+                <MaterialIcons name="local-offer" size={20} color={theme.colors.accent} />
+                <Text style={[styles.resultLabel, { color: theme.colors.textSecondary }]}>Harga Setelah Diskon ({discount}%)</Text>
+              </View>
+              <Text style={[styles.resultValue, { color: theme.colors.accent }]}>
+                {sellingPriceAfterDiscount > 0 ? `Rp ${Math.round(sellingPriceAfterDiscount).toLocaleString('id-ID')}` : '-'}
+              </Text>
+            </View>
+          )}
+
+          {((pph && Number(pph) > 0) || (ppn && Number(ppn) > 0)) && (
+            <View style={styles.resultRow}>
+              <View style={styles.resultLabelContainer}>
+                <MaterialIcons name="receipt-long" size={20} color={theme.colors.error} />
+                <Text style={[styles.resultLabel, { color: theme.colors.textSecondary }]}>Harga Final + Pajak</Text>
+              </View>
+              <Text style={[styles.resultValue, { color: theme.colors.primary, fontSize: 24, fontWeight: 'bold' }]}>
+                {sellingPriceAfterTax > 0 ? `Rp ${Math.round(sellingPriceAfterTax).toLocaleString('id-ID')}` : '-'}
+              </Text>
+            </View>
+          )}
           
           <View style={styles.resultRow}>
             <View style={styles.resultLabelContainer}>
@@ -449,7 +557,8 @@ export default function DetailPage() {
       </ScrollView>
       
       <NotificationToast />
-    </View>
+      </View>
+    </GestureDetector>
   );
 }
 

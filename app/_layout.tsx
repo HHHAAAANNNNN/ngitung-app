@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { View } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-get-random-values'; // HARUS di baris paling atas!
 import { LanguageProvider } from '../src/context/LanguageContext';
 import { NoteProvider } from '../src/context/NoteContext';
@@ -55,10 +56,12 @@ function RootLayoutNav() {
 
 export default function RootLayout() {
   return (
-    <LanguageProvider>
-      <NoteProvider>
-        <RootLayoutNav />
-      </NoteProvider>
-    </LanguageProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <LanguageProvider>
+        <NoteProvider>
+          <RootLayoutNav />
+        </NoteProvider>
+      </LanguageProvider>
+    </GestureHandlerRootView>
   );
 }

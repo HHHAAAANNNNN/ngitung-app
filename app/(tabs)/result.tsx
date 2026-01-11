@@ -5,7 +5,8 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as Sharing from 'expo-sharing';
 import { useState } from 'react';
 import { Alert, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import Animated, { FadeIn, FadeInDown, SlideInRight } from 'react-native-reanimated';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import Animated, { FadeIn, FadeInDown, SlideInRight, runOnJS } from 'react-native-reanimated';
 import Svg, { Circle } from 'react-native-svg';
 import { useNotes } from '../../src/context/NoteContext';
 
@@ -338,11 +339,26 @@ export default function ResultPage() {
     }
   };
 
+  // Swipe gesture to navigate back to detail page
+  const handleSwipeRight = () => {
+    if (note?.id) {
+      router.push(`/(tabs)/detail/${note.id}`);
+    }
+  };
+
+  const swipeGesture = Gesture.Pan()
+    .onEnd((event) => {
+      if (event.translationX > 100 && Math.abs(event.velocityX) > 500) {
+        runOnJS(handleSwipeRight)();
+      }
+    });
+
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      {/* Gradient Decorations */}
-      <View style={[styles.gradientCircle1, { backgroundColor: 'rgba(167, 139, 250, 0.1)' }]} />
-      <View style={[styles.gradientCircle2, { backgroundColor: 'rgba(244, 114, 182, 0.08)' }]} />
+    <GestureDetector gesture={swipeGesture}>
+      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+        {/* Gradient Decorations */}
+        <View style={[styles.gradientCircle1, { backgroundColor: 'rgba(167, 139, 250, 0.1)' }]} />
+        <View style={[styles.gradientCircle2, { backgroundColor: 'rgba(244, 114, 182, 0.08)' }]} />
       
       <ScrollView 
         contentContainerStyle={styles.scrollContent}
@@ -568,7 +584,8 @@ export default function ResultPage() {
       >
         <MaterialIcons name="arrow-back" size={24} color={theme.colors.text} />
       </TouchableOpacity>
-    </View>
+      </View>
+    </GestureDetector>
   );
 }
 

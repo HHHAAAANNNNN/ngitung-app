@@ -221,23 +221,6 @@ export default function OnboardingScreen() {
             </>
           ) : null}
         </View>
-
-        {/* Progress Indicator */}
-        <View style={styles.progressContainer}>
-          <View style={styles.progressBar}>
-            <Animated.View 
-              style={[
-                styles.progressFill,
-                {
-                  width: `${((currentIndex + 1) / slides.length) * 100}%`,
-                }
-              ]} 
-            />
-          </View>
-          <Text style={styles.progressText}>
-            {Math.round(((currentIndex + 1) / slides.length) * 100)}%
-          </Text>
-        </View>
       </View>
     </View>
   );
@@ -408,34 +391,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
     marginLeft: 6,
-  },
-  progressContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 20,
-    paddingTop: 20,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.1)',
-  },
-  progressBar: {
-    flex: 1,
-    height: 4,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 2,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: '#A78BFA',
-    borderRadius: 2,
-  },
-  progressText: {
-    color: '#A78BFA',
-    fontSize: 14,
-    fontWeight: '700',
-    marginLeft: 12,
-    minWidth: 45,
-    textAlign: 'right',
   },
   slide: {
     width: SCREEN_WIDTH,
