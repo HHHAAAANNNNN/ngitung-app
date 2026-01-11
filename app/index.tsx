@@ -438,18 +438,23 @@ const AddNoteModal = React.memo(({
       animationType="fade"
       onRequestClose={onClose}
     >
-      <View style={styles.modalBackdrop}>
-        <Animated.View 
-          entering={SlideInDown.duration(300)}
-          style={[
-            styles.modalContainer,
-            { 
-              backgroundColor: '#1A1625',
-            }
-          ]}>
-          {/* Decorative gradient circles */}
-          <View style={[styles.modalGradient1, { backgroundColor: 'rgba(167, 139, 250, 0.3)' }]} />
-          <View style={[styles.modalGradient2, { backgroundColor: 'rgba(244, 114, 182, 0.2)' }]} />
+      <TouchableOpacity 
+        style={styles.modalBackdrop}
+        activeOpacity={1}
+        onPress={onClose}
+      >
+        <TouchableOpacity activeOpacity={1} onPress={(e) => e.stopPropagation()}>
+          <Animated.View 
+            entering={SlideInDown.duration(300)}
+            style={[
+              styles.modalContainer,
+              { 
+                backgroundColor: '#1A1625',
+              }
+            ]}>
+            {/* Decorative gradient circles */}
+            <View style={[styles.modalGradient1, { backgroundColor: 'rgba(167, 139, 250, 0.3)' }]} />
+            <View style={[styles.modalGradient2, { backgroundColor: 'rgba(244, 114, 182, 0.2)' }]} />
           
           <View style={styles.modalContent}>
             {/* Header Icon */}
@@ -534,7 +539,8 @@ const AddNoteModal = React.memo(({
             </View>
           </View>
         </Animated.View>
-      </View>
+        </TouchableOpacity>
+      </TouchableOpacity>
     </Modal>
   );
 });

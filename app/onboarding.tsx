@@ -201,7 +201,7 @@ export default function OnboardingScreen() {
 
         {/* Action Buttons */}
         <View style={styles.buttonContainer}>
-          {currentIndex < slides.length - 1 ? (
+          {currentIndex < slides.length - 1 && (
             <>
               <TouchableOpacity 
                 style={styles.skipButton} 
@@ -219,7 +219,7 @@ export default function OnboardingScreen() {
                 <MaterialIcons name="arrow-forward" size={20} color="white" />
               </TouchableOpacity>
             </>
-          ) : null}
+          )}
         </View>
       </View>
     </View>
@@ -315,13 +315,11 @@ const SlideItem: React.FC<SlideItemProps> = ({
           </View>
         </Animated.View>
       ) : (
-        <View style={styles.finalSlideContainer}>
-          <Animated.View style={[styles.checkIconContainer, imageAnimatedStyle]}>
-            <View style={styles.checkIconCircle}>
-              <MaterialIcons name="check-circle" size={120} color="#34D399" />
-            </View>
-          </Animated.View>
-        </View>
+        <Animated.View style={[styles.imageContainer, imageAnimatedStyle]}>
+          <View style={styles.checkIconCircle}>
+            <MaterialIcons name="check-circle" size={120} color="#34D399" />
+          </View>
+        </Animated.View>
       )}
 
       {/* Text Content */}
@@ -462,7 +460,7 @@ const styles = StyleSheet.create({
   },
   finalButtonsContainer: {
     width: '100%',
-    marginTop: 40,
+    marginTop: 0,
   },
   getStartedButton: {
     flexDirection: 'row',

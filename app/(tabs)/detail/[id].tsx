@@ -2,9 +2,8 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, { FadeIn, FadeInDown, FadeOutUp, runOnJS, SlideInRight, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import { Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import Animated, { FadeIn, FadeInDown, FadeOutUp, SlideInDown, SlideInRight, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useNotes } from '../../../src/context/NoteContext';
 
 export default function DetailPage() {
@@ -26,6 +25,7 @@ export default function DetailPage() {
       border: 'rgba(255, 255, 255, 0.2)',
       error: '#EF4444',
       success: '#10B981',
+      outline: '#6B7280',
     }
   };
   
@@ -63,18 +63,60 @@ export default function DetailPage() {
   const [totalFixedCost, setTotalFixedCost] = useState(0);
   const [hasChanges, setHasChanges] = useState(false);
   const [showNotification, setShowNotification] = useState(false);
+  
+  // Modal states
+  const [showFixedCostModal, setShowFixedCostModal] = useState(false);
+  const [showVariableCostModal, setShowVariableCostModal] = useState(false);
+  const [tempFixedCostName, setTempFixedCostName] = useState('');
+  const [tempFixedCostAmount, setTempFixedCostAmount] = useState('');
+  const [tempVariableCostName, setTempVariableCostName] = useState('');
+  const [tempVariableCostAmount, setTempVariableCostAmount] = useState('');
+  const [tempVariableCostQuantity, setTempVariableCostQuantity] = useState('');
 
   // Generate ID unik untuk item
   const generateId = () => Math.random().toString(36).substr(2, 9);
 
   // Tambahkan biaya tetap
   const addFixedCost = () => {
-    setFixedCosts([...fixedCosts, { id: generateId(), name: '', amount: null }]);
+    setTempFixedCostName('');
+    setTempFixedCostAmount('');
+    setShowFixedCostModal(true);
+  };
+  
+  const saveFixedCost = () => {
+    if (tempFixedCostName.trim() && tempFixedCostAmount) {
+      setFixedCosts([...fixedCosts, { 
+        id: generateId(), 
+        name: tempFixedCostName.trim(), 
+        amount: Number(tempFixedCostAmount) 
+      }]);
+      setShowFixedCostModal(false);
+      setTempFixedCostName('');
+      setTempFixedCostAmount('');
+    }
   };
 
   // Tambahkan biaya variabel
   const addVariableCost = () => {
-    setVariableCosts([...variableCosts, { id: generateId(), name: '', amount: null, quantity: null }]);
+    setTempVariableCostName('');
+    setTempVariableCostAmount('');
+    setTempVariableCostQuantity('');
+    setShowVariableCostModal(true);
+  };
+  
+  const saveVariableCost = () => {
+    if (tempVariableCostName.trim() && tempVariableCostAmount && tempVariableCostQuantity) {
+      setVariableCosts([...variableCosts, { 
+        id: generateId(), 
+        name: tempVariableCostName.trim(), 
+        amount: Number(tempVariableCostAmount),
+        quantity: Number(tempVariableCostQuantity)
+      }]);
+      setShowVariableCostModal(false);
+      setTempVariableCostName('');
+      setTempVariableCostAmount('');
+      setTempVariableCostQuantity('');
+    }
   };
 
   // Hapus biaya tetap
@@ -198,21 +240,8 @@ export default function DetailPage() {
     );
   };
 
-  // Swipe gesture to navigate to result page
-  const handleSwipeLeft = () => {
-    router.push('/(tabs)/result');
-  };
-
-  const swipeGesture = Gesture.Pan()
-    .onEnd((event) => {
-      if (event.translationX < -100 && Math.abs(event.velocityX) > 500) {
-        runOnJS(handleSwipeLeft)();
-      }
-    });
-
   return (
-    <GestureDetector gesture={swipeGesture}>
-      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
         {/* Gradient Decorations */}
         <View style={[styles.gradientCircle1, { backgroundColor: 'rgba(167, 139, 250, 0.1)' }]} />
         <View style={[styles.gradientCircle2, { backgroundColor: 'rgba(244, 114, 182, 0.08)' }]} />
@@ -540,7 +569,7 @@ export default function DetailPage() {
         <TouchableOpacity 
           onPress={saveCalculation}
           style={[
-            styles.saveButton, 
+            styles.saveButtonMain, 
             { 
               backgroundColor: hasChanges ? theme.colors.primary : theme.colors.surface,
               opacity: hasChanges ? 1 : 0.5,
@@ -557,8 +586,325 @@ export default function DetailPage() {
       </ScrollView>
       
       <NotificationToast />
-      </View>
-    </GestureDetector>
+      
+      {/* Fixed Cost Modal */}
+      <Modal
+        visible={showFixedCostModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowFixedCostModal(false)}
+      >
+        <TouchableOpacity 
+          style={styles.modalBackdrop}
+          activeOpacity={1}
+          onPress={() => setShowFixedCostModal(false)}
+        >
+          <TouchableOpacity activeOpacity={1} onPress={(e) => e.stopPropagation()}>
+            <Animated.View 
+              entering={SlideInDown.duration(300)}
+              style={[styles.modalContainer, { backgroundColor: '#1A1625' }]}
+            >
+              <View style={[styles.modalGradient1, { backgroundColor: 'rgba(167, 139, 250, 0.3)' }]} />
+              <View style={[styles.modalGradient2, { backgroundColor: 'rgba(244, 114, 182, 0.2)' }]} />
+              
+              <View style={styles.modalContent}>
+                <View style={[styles.modalIconContainer, { backgroundColor: 'rgba(167, 139, 250, 0.15)' }]}>
+                  <MaterialIcons name="account-balance-wallet" size={32} color={theme.colors.primary} />
+                </View>
+                
+                <Text style={[styles.modalTitle, { color: theme.colors.text }]}>Tambah Biaya Tetap</Text>
+                <Text style={[styles.modalSubtitle, { color: theme.colors.textSecondary }]}>
+                  Biaya yang jumlahnya tetap setiap bulan
+                </Text>
+                
+                {/* Nama Input */}
+                <View style={styles.inputWrapper}>
+                  <Text style={[styles.inputLabel, { color: theme.colors.textSecondary }]}>Nama Biaya</Text>
+                  <Text style={[styles.helperText, { color: theme.colors.outline, marginBottom: 8 }]}>Contoh: Sewa tempat, listrik, gaji karyawan, dsb</Text>
+                  <View style={[styles.inputContainer, { backgroundColor: 'rgba(255, 255, 255, 0.05)', borderColor: 'rgba(255, 255, 255, 0.15)' }]}>
+                    <MaterialIcons name="label" size={20} color={theme.colors.outline} style={styles.inputIcon} />
+                    <TextInput
+                      style={[styles.modalInput, { color: theme.colors.text }]}
+                      placeholder=""
+                      placeholderTextColor={theme.colors.outline}
+                      value={tempFixedCostName}
+                      onChangeText={setTempFixedCostName}
+                      autoFocus
+                      keyboardAppearance="dark"
+                    />
+                  </View>
+                </View>
+                
+                {/* Amount Input with Quick Buttons */}
+                <View style={styles.inputWrapper}>
+                  <Text style={[styles.inputLabel, { color: theme.colors.textSecondary }]}>Jumlah (Rp)</Text>
+                  <Text style={[styles.helperText, { color: theme.colors.outline, marginBottom: 8 }]}>Masukkan nominal atau gunakan tombol cepat di bawah</Text>
+                  <View style={[styles.inputContainer, { backgroundColor: 'rgba(255, 255, 255, 0.05)', borderColor: 'rgba(255, 255, 255, 0.15)' }]}>
+                    <Text style={[styles.currency, { color: theme.colors.textSecondary }]}>Rp</Text>
+                    <TextInput
+                      style={[styles.modalInput, { color: theme.colors.text }]}
+                      placeholder=""
+                      placeholderTextColor={theme.colors.outline}
+                      value={tempFixedCostAmount}
+                      onChangeText={setTempFixedCostAmount}
+                      keyboardType="numeric"
+                      keyboardAppearance="dark"
+                    />
+                  </View>
+                  
+                  {/* Quick Amount Buttons */}
+                  <View style={styles.quickButtonsRow}>
+                    <TouchableOpacity
+                      style={[styles.quickButton, { backgroundColor: 'rgba(239, 68, 68, 0.15)', borderColor: theme.colors.error }]}
+                      onPress={() => {
+                        const current = Number(tempFixedCostAmount) || 0;
+                        setTempFixedCostAmount(Math.max(0, current - 10000).toString());
+                      }}
+                    >
+                      <Text style={[styles.quickButtonText, { color: theme.colors.error }]}>-10K</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.quickButton, { backgroundColor: 'rgba(239, 68, 68, 0.15)', borderColor: theme.colors.error }]}
+                      onPress={() => {
+                        const current = Number(tempFixedCostAmount) || 0;
+                        setTempFixedCostAmount(Math.max(0, current - 1000).toString());
+                      }}
+                    >
+                      <Text style={[styles.quickButtonText, { color: theme.colors.error }]}>-1K</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.quickButton, { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: theme.colors.success }]}
+                      onPress={() => {
+                        const current = Number(tempFixedCostAmount) || 0;
+                        setTempFixedCostAmount((current + 1000).toString());
+                      }}
+                    >
+                      <Text style={[styles.quickButtonText, { color: theme.colors.success }]}>+1K</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.quickButton, { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: theme.colors.success }]}
+                      onPress={() => {
+                        const current = Number(tempFixedCostAmount) || 0;
+                        setTempFixedCostAmount((current + 10000).toString());
+                      }}
+                    >
+                      <Text style={[styles.quickButtonText, { color: theme.colors.success }]}>+10K</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+                
+                {/* Action Buttons */}
+                <View style={styles.modalActions}>
+                  <TouchableOpacity 
+                    onPress={() => setShowFixedCostModal(false)}
+                    style={[styles.modalButton, styles.cancelButton, { borderColor: 'rgba(255, 255, 255, 0.2)', backgroundColor: 'rgba(255, 255, 255, 0.05)' }]}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[styles.modalButtonText, { color: theme.colors.text }]}>Batal</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    onPress={saveFixedCost}
+                    style={[styles.modalButton, styles.saveButton, { opacity: !tempFixedCostName.trim() || !tempFixedCostAmount ? 0.5 : 1 }]}
+                    activeOpacity={0.8}
+                    disabled={!tempFixedCostName.trim() || !tempFixedCostAmount}
+                  >
+                    <Text style={[styles.modalButtonText, { color: 'white' }]}>Tambahkan</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </Animated.View>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
+      
+      {/* Variable Cost Modal */}
+      <Modal
+        visible={showVariableCostModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowVariableCostModal(false)}
+      >
+        <TouchableOpacity 
+          style={styles.modalBackdrop}
+          activeOpacity={1}
+          onPress={() => setShowVariableCostModal(false)}
+        >
+          <TouchableOpacity activeOpacity={1} onPress={(e) => e.stopPropagation()}>
+            <Animated.View 
+              entering={SlideInDown.duration(300)}
+              style={[styles.modalContainer, { backgroundColor: '#1A1625' }]}
+            >
+              <View style={[styles.modalGradient1, { backgroundColor: 'rgba(52, 211, 153, 0.3)' }]} />
+              <View style={[styles.modalGradient2, { backgroundColor: 'rgba(244, 114, 182, 0.2)' }]} />
+              
+              <View style={styles.modalContent}>
+                <View style={[styles.modalIconContainer, { backgroundColor: 'rgba(52, 211, 153, 0.15)' }]}>
+                  <MaterialIcons name="shopping-cart" size={32} color={theme.colors.secondary} />
+                </View>
+                
+                <Text style={[styles.modalTitle, { color: theme.colors.text }]}>Tambah Biaya Variabel</Text>
+                <Text style={[styles.modalSubtitle, { color: theme.colors.textSecondary }]}>
+                  Biaya yang berubah sesuai jumlah produksi
+                </Text>
+                
+                {/* Nama Input */}
+                <View style={styles.inputWrapper}>
+                  <Text style={[styles.inputLabel, { color: theme.colors.textSecondary }]}>Nama Bahan</Text>
+                  <Text style={[styles.helperText, { color: theme.colors.outline, marginBottom: 8 }]}>Contoh: Tepung terigu, gula pasir, kemasan plastik, dsb</Text>
+                  <View style={[styles.inputContainer, { backgroundColor: 'rgba(255, 255, 255, 0.05)', borderColor: 'rgba(255, 255, 255, 0.15)' }]}>
+                    <MaterialIcons name="inventory" size={20} color={theme.colors.outline} style={styles.inputIcon} />
+                    <TextInput
+                      style={[styles.modalInput, { color: theme.colors.text }]}
+                      placeholder=""
+                      placeholderTextColor={theme.colors.outline}
+                      value={tempVariableCostName}
+                      onChangeText={setTempVariableCostName}
+                      autoFocus
+                      keyboardAppearance="dark"
+                    />
+                  </View>
+                </View>
+                
+                {/* Amount Input with Quick Buttons */}
+                <View style={styles.inputWrapper}>
+                  <Text style={[styles.inputLabel, { color: theme.colors.textSecondary }]}>Harga per Unit (Rp)</Text>
+                  <Text style={[styles.helperText, { color: theme.colors.outline, marginBottom: 8 }]}>Harga satuan bahan atau gunakan tombol cepat</Text>
+                  <View style={[styles.inputContainer, { backgroundColor: 'rgba(255, 255, 255, 0.05)', borderColor: 'rgba(255, 255, 255, 0.15)' }]}>
+                    <Text style={[styles.currency, { color: theme.colors.textSecondary }]}>Rp</Text>
+                    <TextInput
+                      style={[styles.modalInput, { color: theme.colors.text }]}
+                      placeholder=""
+                      placeholderTextColor={theme.colors.outline}
+                      value={tempVariableCostAmount}
+                      onChangeText={setTempVariableCostAmount}
+                      keyboardType="numeric"
+                      keyboardAppearance="dark"
+                    />
+                  </View>
+                  
+                  {/* Quick Amount Buttons for Variable Cost */}
+                  <View style={styles.quickButtonsRow}>
+                    <TouchableOpacity
+                      style={[styles.quickButton, { backgroundColor: 'rgba(239, 68, 68, 0.15)', borderColor: theme.colors.error }]}
+                      onPress={() => {
+                        const current = Number(tempVariableCostAmount) || 0;
+                        setTempVariableCostAmount(Math.max(0, current - 5000).toString());
+                      }}
+                    >
+                      <Text style={[styles.quickButtonText, { color: theme.colors.error }]}>-5K</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.quickButton, { backgroundColor: 'rgba(239, 68, 68, 0.15)', borderColor: theme.colors.error }]}
+                      onPress={() => {
+                        const current = Number(tempVariableCostAmount) || 0;
+                        setTempVariableCostAmount(Math.max(0, current - 1000).toString());
+                      }}
+                    >
+                      <Text style={[styles.quickButtonText, { color: theme.colors.error }]}>-1K</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.quickButton, { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: theme.colors.success }]}
+                      onPress={() => {
+                        const current = Number(tempVariableCostAmount) || 0;
+                        setTempVariableCostAmount((current + 1000).toString());
+                      }}
+                    >
+                      <Text style={[styles.quickButtonText, { color: theme.colors.success }]}>+1K</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.quickButton, { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: theme.colors.success }]}
+                      onPress={() => {
+                        const current = Number(tempVariableCostAmount) || 0;
+                        setTempVariableCostAmount((current + 5000).toString());
+                      }}
+                    >
+                      <Text style={[styles.quickButtonText, { color: theme.colors.success }]}>+5K</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+                
+                {/* Quantity Input with Quick Buttons */}
+                <View style={styles.inputWrapper}>
+                  <Text style={[styles.inputLabel, { color: theme.colors.textSecondary }]}>Jumlah</Text>
+                  <Text style={[styles.helperText, { color: theme.colors.outline, marginBottom: 8 }]}>Jumlah yang dibutuhkan per produk</Text>
+                  <View style={[styles.inputContainer, { backgroundColor: 'rgba(255, 255, 255, 0.05)', borderColor: 'rgba(255, 255, 255, 0.15)' }]}>
+                    <MaterialIcons name="format-list-numbered" size={20} color={theme.colors.outline} style={styles.inputIcon} />
+                    <TextInput
+                      style={[styles.modalInput, { color: theme.colors.text }]}
+                      placeholder=""
+                      placeholderTextColor={theme.colors.outline}
+                      value={tempVariableCostQuantity}
+                      onChangeText={setTempVariableCostQuantity}
+                      keyboardType="numeric"
+                      keyboardAppearance="dark"
+                    />
+                  </View>
+                  
+                  {/* Quick Quantity Buttons */}
+                  <View style={styles.quickButtonsRow}>
+                    <TouchableOpacity
+                      style={[styles.quickButton, { backgroundColor: 'rgba(239, 68, 68, 0.15)', borderColor: theme.colors.error }]}
+                      onPress={() => {
+                        const current = Number(tempVariableCostQuantity) || 0;
+                        setTempVariableCostQuantity(Math.max(0, current - 5).toString());
+                      }}
+                    >
+                      <Text style={[styles.quickButtonText, { color: theme.colors.error }]}>-5</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.quickButton, { backgroundColor: 'rgba(239, 68, 68, 0.15)', borderColor: theme.colors.error }]}
+                      onPress={() => {
+                        const current = Number(tempVariableCostQuantity) || 0;
+                        setTempVariableCostQuantity(Math.max(0, current - 1).toString());
+                      }}
+                    >
+                      <Text style={[styles.quickButtonText, { color: theme.colors.error }]}>-1</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.quickButton, { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: theme.colors.success }]}
+                      onPress={() => {
+                        const current = Number(tempVariableCostQuantity) || 0;
+                        setTempVariableCostQuantity((current + 1).toString());
+                      }}
+                    >
+                      <Text style={[styles.quickButtonText, { color: theme.colors.success }]}>+1</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.quickButton, { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: theme.colors.success }]}
+                      onPress={() => {
+                        const current = Number(tempVariableCostQuantity) || 0;
+                        setTempVariableCostQuantity((current + 5).toString());
+                      }}
+                    >
+                      <Text style={[styles.quickButtonText, { color: theme.colors.success }]}>+5</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+                
+                {/* Action Buttons */}
+                <View style={styles.modalActions}>
+                  <TouchableOpacity 
+                    onPress={() => setShowVariableCostModal(false)}
+                    style={[styles.modalButton, styles.cancelButton, { borderColor: 'rgba(255, 255, 255, 0.2)', backgroundColor: 'rgba(255, 255, 255, 0.05)' }]}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[styles.modalButtonText, { color: theme.colors.text }]}>Batal</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    onPress={saveVariableCost}
+                    style={[styles.modalButton, styles.saveButton, { opacity: !tempVariableCostName.trim() || !tempVariableCostAmount || !tempVariableCostQuantity ? 0.5 : 1 }]}
+                    activeOpacity={0.8}
+                    disabled={!tempVariableCostName.trim() || !tempVariableCostAmount || !tempVariableCostQuantity}
+                  >
+                    <Text style={[styles.modalButtonText, { color: 'white' }]}>Tambahkan</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </Animated.View>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
+    </View>
   );
 }
 
@@ -776,7 +1122,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     letterSpacing: -0.3,
   },
-  saveButton: {
+  saveButtonMain: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -860,5 +1206,120 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     height: 3,
+  },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContainer: {
+    width: '100%',
+    maxWidth: 500,
+    borderRadius: 24,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.5,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  modalGradient1: {
+    position: 'absolute',
+    top: -50,
+    right: -50,
+    width: 150,
+    height: 150,
+    borderRadius: 75,
+    opacity: 0.3,
+  },
+  modalGradient2: {
+    position: 'absolute',
+    bottom: -60,
+    left: -60,
+    width: 180,
+    height: 180,
+    borderRadius: 90,
+    opacity: 0.2,
+  },
+  modalContent: {
+    padding: 24,
+  },
+  modalIconContainer: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
+    alignSelf: 'center',
+    marginBottom: 16,
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  modalSubtitle: {
+    fontSize: 14,
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  inputWrapper: {
+    marginBottom: 20,
+  },
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  inputIcon: {
+    marginRight: 10,
+  },
+  modalInput: {
+    flex: 1,
+    fontSize: 16,
+    paddingVertical: 12,
+  },
+  quickButtonsRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 12,
+  },
+  quickButton: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  quickButtonText: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  modalActions: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 24,
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: 16,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cancelButton: {
+    borderWidth: 2,
+  },
+  modalButtonText: {
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  saveButton: {
+    backgroundColor: '#A78BFA',
   },
 });
