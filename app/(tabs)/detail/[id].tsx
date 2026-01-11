@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown, FadeOutUp, SlideInDown, SlideInRight, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useNotes } from '../../../src/context/NoteContext';
+import { formatCurrency, formatCurrencyInput, parseCurrency } from '../../../src/utils/currency';
 
 export default function DetailPage() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -88,7 +89,7 @@ export default function DetailPage() {
       setFixedCosts([...fixedCosts, { 
         id: generateId(), 
         name: tempFixedCostName.trim(), 
-        amount: Number(tempFixedCostAmount) 
+        amount: parseCurrency(tempFixedCostAmount) 
       }]);
       setShowFixedCostModal(false);
       setTempFixedCostName('');
@@ -109,7 +110,7 @@ export default function DetailPage() {
       setVariableCosts([...variableCosts, { 
         id: generateId(), 
         name: tempVariableCostName.trim(), 
-        amount: Number(tempVariableCostAmount),
+        amount: parseCurrency(tempVariableCostAmount),
         quantity: Number(tempVariableCostQuantity)
       }]);
       setShowVariableCostModal(false);
@@ -251,8 +252,8 @@ export default function DetailPage() {
           onPress={() => router.back()}
           style={[styles.floatingBackButton, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}
         >
-        <MaterialIcons name="arrow-back" size={24} color={theme.colors.text} />
-      </TouchableOpacity>
+          <MaterialIcons name="arrow-back" size={24} color={theme.colors.text} />
+        </TouchableOpacity>
       
       <ScrollView 
         contentContainerStyle={styles.scrollContent}
@@ -305,10 +306,11 @@ export default function DetailPage() {
                 <Text style={[styles.currency, { color: theme.colors.textSecondary }]}>Rp</Text>
                 <TextInput
                   style={[styles.input, { color: theme.colors.text }]}
-                  value={item.amount !== null && item.amount !== undefined ? item.amount.toString() : ''}
+                  value={item.amount !== null && item.amount !== undefined ? formatCurrency(item.amount) : ''}
                   onChangeText={text => {
+                    const formatted = formatCurrencyInput(text);
                     const newCosts = [...fixedCosts];
-                    newCosts[index].amount = text ? Number(text) : 0;
+                    newCosts[index].amount = parseCurrency(formatted);
                     setFixedCosts(newCosts);
                   }}
                   keyboardType="numeric"
@@ -369,10 +371,11 @@ export default function DetailPage() {
                   <Text style={[styles.currency, { color: theme.colors.textSecondary, fontSize: 12 }]}>Rp</Text>
                   <TextInput
                     style={[styles.input, { color: theme.colors.text, fontSize: 14 }]}
-                    value={item.amount !== null && item.amount !== undefined ? item.amount.toString() : ''}
+                    value={item.amount !== null && item.amount !== undefined ? formatCurrency(item.amount) : ''}
                     onChangeText={text => {
+                      const formatted = formatCurrencyInput(text);
                       const newCosts = [...variableCosts];
-                      newCosts[index].amount = text ? Number(text) : 0;
+                      newCosts[index].amount = parseCurrency(formatted);
                       setVariableCosts(newCosts);
                     }}
                     keyboardType="numeric"
@@ -519,6 +522,20 @@ export default function DetailPage() {
             </Text>
           </View>
           
+          {bpp > 0 && (
+            <View style={[styles.explanationBox, { backgroundColor: 'rgba(52, 211, 153, 0.1)', borderColor: 'rgba(52, 211, 153, 0.3)' }]}>
+              <MaterialIcons name="info-outline" size={16} color={theme.colors.secondary} style={{ marginRight: 8 }} />
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.explanationText, { fontWeight: 700, color: theme.colors.text }]}>
+                  BPP (Biaya Pokok Produksi)
+                </Text>
+                <Text style={[styles.explanationText, { color: theme.colors.textSecondary, marginTop: 4 }]}>
+                  adalah total biaya untuk membuat 1 produk. Harga jual Anda harus lebih tinggi dari BPP agar mendapat untung.
+                </Text>
+              </View>
+            </View>
+          )}
+          
           <View style={styles.resultRow}>
             <View style={styles.resultLabelContainer}>
               <MaterialIcons name="sell" size={20} color={theme.colors.primary} />
@@ -528,6 +545,20 @@ export default function DetailPage() {
               {sellingPrice > 0 ? `Rp ${Math.round(sellingPrice).toLocaleString('id-ID')}` : '-'}
             </Text>
           </View>
+          
+          {sellingPrice > 0 && (
+            <View style={[styles.explanationBox, { backgroundColor: 'rgba(167, 139, 250, 0.1)', borderColor: 'rgba(167, 139, 250, 0.3)' }]}>
+              <MaterialIcons name="info-outline" size={16} color={theme.colors.primary} style={{ marginRight: 8 }} />
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.explanationText, { fontWeight: 700, color: theme.colors.text }]}>
+                  Harga Jual Optimal
+                </Text>
+                <Text style={[styles.explanationText, { color: theme.colors.textSecondary, marginTop: 4 }]}>
+                  sudah termasuk margin keuntungan yang Anda tetapkan. Ini adalah harga minimum yang disarankan untuk dijual.
+                </Text>
+              </View>
+            </View>
+          )}
 
           {discount && Number(discount) > 0 && (
             <View style={styles.resultRow}>
@@ -563,6 +594,20 @@ export default function DetailPage() {
                 `${Math.round((totalFixedCost) / (sellingPrice - bpp))} unit` : '-'}
             </Text>
           </View>
+          
+          {estimatedSales && bpp && sellingPrice && (
+            <View style={[styles.explanationBox, { backgroundColor: 'rgba(244, 114, 182, 0.1)', borderColor: 'rgba(244, 114, 182, 0.3)' }]}>
+              <MaterialIcons name="info-outline" size={16} color={theme.colors.accent} style={{ marginRight: 8 }} />
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.explanationText, { fontWeight: 700, color: theme.colors.text }]}>
+                  Break-even Point
+                </Text>
+                <Text style={[styles.explanationText, { color: theme.colors.textSecondary, marginTop: 4 }]}>
+                  adalah jumlah unit yang harus terjual agar total pendapatan sama dengan total biaya (tidak untung, tidak rugi).
+                </Text>
+              </View>
+            </View>
+          )}
         </Animated.View>
 
         {/* Tombol Simpan */}
@@ -646,7 +691,10 @@ export default function DetailPage() {
                       placeholder=""
                       placeholderTextColor={theme.colors.outline}
                       value={tempFixedCostAmount}
-                      onChangeText={setTempFixedCostAmount}
+                      onChangeText={(text) => {
+                        const formatted = formatCurrencyInput(text);
+                        setTempFixedCostAmount(formatted);
+                      }}
                       keyboardType="numeric"
                       keyboardAppearance="dark"
                     />
@@ -657,8 +705,8 @@ export default function DetailPage() {
                     <TouchableOpacity
                       style={[styles.quickButton, { backgroundColor: 'rgba(239, 68, 68, 0.15)', borderColor: theme.colors.error }]}
                       onPress={() => {
-                        const current = Number(tempFixedCostAmount) || 0;
-                        setTempFixedCostAmount(Math.max(0, current - 10000).toString());
+                        const current = parseCurrency(tempFixedCostAmount);
+                        setTempFixedCostAmount(formatCurrency(Math.max(0, current - 10000)));
                       }}
                     >
                       <Text style={[styles.quickButtonText, { color: theme.colors.error }]}>-10K</Text>
@@ -666,8 +714,8 @@ export default function DetailPage() {
                     <TouchableOpacity
                       style={[styles.quickButton, { backgroundColor: 'rgba(239, 68, 68, 0.15)', borderColor: theme.colors.error }]}
                       onPress={() => {
-                        const current = Number(tempFixedCostAmount) || 0;
-                        setTempFixedCostAmount(Math.max(0, current - 1000).toString());
+                        const current = parseCurrency(tempFixedCostAmount);
+                        setTempFixedCostAmount(formatCurrency(Math.max(0, current - 1000)));
                       }}
                     >
                       <Text style={[styles.quickButtonText, { color: theme.colors.error }]}>-1K</Text>
@@ -675,8 +723,8 @@ export default function DetailPage() {
                     <TouchableOpacity
                       style={[styles.quickButton, { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: theme.colors.success }]}
                       onPress={() => {
-                        const current = Number(tempFixedCostAmount) || 0;
-                        setTempFixedCostAmount((current + 1000).toString());
+                        const current = parseCurrency(tempFixedCostAmount);
+                        setTempFixedCostAmount(formatCurrency(current + 1000));
                       }}
                     >
                       <Text style={[styles.quickButtonText, { color: theme.colors.success }]}>+1K</Text>
@@ -684,8 +732,8 @@ export default function DetailPage() {
                     <TouchableOpacity
                       style={[styles.quickButton, { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: theme.colors.success }]}
                       onPress={() => {
-                        const current = Number(tempFixedCostAmount) || 0;
-                        setTempFixedCostAmount((current + 10000).toString());
+                        const current = parseCurrency(tempFixedCostAmount);
+                        setTempFixedCostAmount(formatCurrency(current + 10000));
                       }}
                     >
                       <Text style={[styles.quickButtonText, { color: theme.colors.success }]}>+10K</Text>
@@ -776,7 +824,10 @@ export default function DetailPage() {
                       placeholder=""
                       placeholderTextColor={theme.colors.outline}
                       value={tempVariableCostAmount}
-                      onChangeText={setTempVariableCostAmount}
+                      onChangeText={(text) => {
+                        const formatted = formatCurrencyInput(text);
+                        setTempVariableCostAmount(formatted);
+                      }}
                       keyboardType="numeric"
                       keyboardAppearance="dark"
                     />
@@ -787,8 +838,8 @@ export default function DetailPage() {
                     <TouchableOpacity
                       style={[styles.quickButton, { backgroundColor: 'rgba(239, 68, 68, 0.15)', borderColor: theme.colors.error }]}
                       onPress={() => {
-                        const current = Number(tempVariableCostAmount) || 0;
-                        setTempVariableCostAmount(Math.max(0, current - 5000).toString());
+                        const current = parseCurrency(tempVariableCostAmount);
+                        setTempVariableCostAmount(formatCurrency(Math.max(0, current - 5000)));
                       }}
                     >
                       <Text style={[styles.quickButtonText, { color: theme.colors.error }]}>-5K</Text>
@@ -796,8 +847,8 @@ export default function DetailPage() {
                     <TouchableOpacity
                       style={[styles.quickButton, { backgroundColor: 'rgba(239, 68, 68, 0.15)', borderColor: theme.colors.error }]}
                       onPress={() => {
-                        const current = Number(tempVariableCostAmount) || 0;
-                        setTempVariableCostAmount(Math.max(0, current - 1000).toString());
+                        const current = parseCurrency(tempVariableCostAmount);
+                        setTempVariableCostAmount(formatCurrency(Math.max(0, current - 1000)));
                       }}
                     >
                       <Text style={[styles.quickButtonText, { color: theme.colors.error }]}>-1K</Text>
@@ -805,8 +856,8 @@ export default function DetailPage() {
                     <TouchableOpacity
                       style={[styles.quickButton, { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: theme.colors.success }]}
                       onPress={() => {
-                        const current = Number(tempVariableCostAmount) || 0;
-                        setTempVariableCostAmount((current + 1000).toString());
+                        const current = parseCurrency(tempVariableCostAmount);
+                        setTempVariableCostAmount(formatCurrency(current + 1000));
                       }}
                     >
                       <Text style={[styles.quickButtonText, { color: theme.colors.success }]}>+1K</Text>
@@ -814,8 +865,8 @@ export default function DetailPage() {
                     <TouchableOpacity
                       style={[styles.quickButton, { backgroundColor: 'rgba(16, 185, 129, 0.15)', borderColor: theme.colors.success }]}
                       onPress={() => {
-                        const current = Number(tempVariableCostAmount) || 0;
-                        setTempVariableCostAmount((current + 5000).toString());
+                        const current = parseCurrency(tempVariableCostAmount);
+                        setTempVariableCostAmount(formatCurrency(current + 5000));
                       }}
                     >
                       <Text style={[styles.quickButtonText, { color: theme.colors.success }]}>+5K</Text>
@@ -1121,6 +1172,20 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
     letterSpacing: -0.3,
+  },
+  explanationBox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    marginBottom: 16,
+    marginTop: -8,
+  },
+  explanationText: {
+    flex: 1,
+    fontSize: 13,
+    lineHeight: 18,
   },
   saveButtonMain: {
     flexDirection: 'row',

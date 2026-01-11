@@ -23,6 +23,7 @@ import Animated, {
     withTiming
 } from 'react-native-reanimated';
 import { useLanguage } from '../src/context/LanguageContext';
+import { useTheme } from '../src/context/ThemeContext';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -48,6 +49,7 @@ const slides = [
 export default function OnboardingScreen() {
   const router = useRouter();
   const { language, setLanguage, t } = useLanguage();
+  const { mode, toggleTheme } = useTheme();
   const scrollX = useSharedValue(0);
   const scrollViewRef = useRef<Animated.ScrollView>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -119,6 +121,15 @@ export default function OnboardingScreen() {
       {/* Background Gradients */}
       <View style={styles.gradientTopLeft} />
       <View style={styles.gradientBottomRight} />
+
+      {/* Theme Toggle - Top Right */}
+      <TouchableOpacity 
+        style={[styles.themeToggle]} 
+        onPress={toggleTheme}
+        activeOpacity={0.8}
+      >
+        <MaterialIcons name={mode === 'dark' ? 'light-mode' : 'dark-mode'} size={24} color="#A78BFA" />
+      </TouchableOpacity>
 
       {/* Language Toggle - Top Right */}
       <TouchableOpacity 
@@ -378,6 +389,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: 'rgba(167, 139, 250, 0.15)',
     paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(167, 139, 250, 0.3)',
+    zIndex: 10,
+  },
+  themeToggle: {
+    position: 'absolute',
+    top: 50,
+    right: 90,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(167, 139, 250, 0.15)',
+    paddingHorizontal: 10,
     paddingVertical: 8,
     borderRadius: 20,
     borderWidth: 1,

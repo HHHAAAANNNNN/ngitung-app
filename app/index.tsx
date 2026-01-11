@@ -17,6 +17,7 @@ import {
 import Animated, { FadeIn, SlideInDown, SlideOutUp } from 'react-native-reanimated';
 import { useLanguage } from '../src/context/LanguageContext';
 import { Note, useNotes } from '../src/context/NoteContext';
+import { useTheme } from '../src/context/ThemeContext';
 
 type ColorSchemeName = 'light' | 'dark' | null | undefined;
 
@@ -42,6 +43,7 @@ export default function MainPage() {
   const colorScheme = useColorScheme();
   const router = useRouter();
   const { language, setLanguage, t } = useLanguage();
+  const { mode, toggleTheme, colors: themeColors } = useTheme();
   const { notes, addNote, deleteNote, updateNote } = useNotes();
   const [modalVisible, setModalVisible] = useState(false);
   const [settingsModalVisible, setSettingsModalVisible] = useState(false);
@@ -50,22 +52,9 @@ export default function MainPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const { width } = useWindowDimensions();
 
-  // Dark mode theme
+  // Theme with context colors
   const theme = {
-    colors: {
-      primary: '#A78BFA',
-      secondary: '#34D399',
-      accent: '#F472B6',
-      surface: 'rgba(30, 27, 75, 0.7)',
-      background: '#0F0A1F',
-      onBackground: '#F3F4F6',
-      onSurface: '#E5E7EB',
-      outline: '#6B7280',
-      text: '#F9FAFB',
-      textSecondary: '#9CA3AF',
-      glass: 'rgba(255, 255, 255, 0.1)',
-      glassBorder: 'rgba(255, 255, 255, 0.2)',
-    }
+    colors: themeColors
   };
 
   // Memoized filtered notes for performance
@@ -189,6 +178,15 @@ export default function MainPage() {
           activeOpacity={0.8}
         >
           <MaterialIcons name="help-outline" size={22} color={theme.colors.primary} />
+        </TouchableOpacity>
+
+        {/* Theme Toggle - Right Top */}
+        <TouchableOpacity 
+          style={[styles.languageToggle, { top: 40, right: 80 }]} 
+          onPress={toggleTheme}
+          activeOpacity={0.8}
+        >
+          <MaterialIcons name={mode === 'dark' ? 'light-mode' : 'dark-mode'} size={20} color={theme.colors.primary} />
         </TouchableOpacity>
 
         {/* Language Toggle - Right */}

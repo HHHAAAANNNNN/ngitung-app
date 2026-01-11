@@ -7,6 +7,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-get-random-values'; // HARUS di baris paling atas!
 import { LanguageProvider } from '../src/context/LanguageContext';
 import { NoteProvider } from '../src/context/NoteContext';
+import { ThemeProvider } from '../src/context/ThemeContext';
 
 function RootLayoutNav() {
   const segments = useSegments();
@@ -57,11 +58,13 @@ function RootLayoutNav() {
 export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <LanguageProvider>
-        <NoteProvider>
-          <RootLayoutNav />
-        </NoteProvider>
-      </LanguageProvider>
+      <ThemeProvider>
+        <LanguageProvider>
+          <NoteProvider>
+            <RootLayoutNav />
+          </NoteProvider>
+        </LanguageProvider>
+      </ThemeProvider>
     </GestureHandlerRootView>
   );
 }
