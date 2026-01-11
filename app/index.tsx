@@ -15,6 +15,7 @@ import {
   useWindowDimensions
 } from 'react-native';
 import Animated, { FadeIn, SlideInDown, SlideOutUp } from 'react-native-reanimated';
+import { useLanguage } from '../src/context/LanguageContext';
 import { Note, useNotes } from '../src/context/NoteContext';
 
 type ColorSchemeName = 'light' | 'dark' | null | undefined;
@@ -40,6 +41,7 @@ const GradientBackground = ({ children }: { children: React.ReactNode }) => {
 export default function MainPage() {
   const colorScheme = useColorScheme();
   const router = useRouter();
+  const { language, setLanguage, t } = useLanguage();
   const { notes, addNote, deleteNote, updateNote } = useNotes();
   const [modalVisible, setModalVisible] = useState(false);
   const [settingsModalVisible, setSettingsModalVisible] = useState(false);
@@ -143,6 +145,11 @@ export default function MainPage() {
     }
   }, [selectedNote, deleteNote]);
 
+  const handleViewTutorial = useCallback(async () => {
+    // Navigate to onboarding screen
+    router.push('/onboarding');
+  }, [router]);
+
   // Empty state component
   const EmptyState = useMemo(() => (
     <Animated.View 
@@ -155,15 +162,15 @@ export default function MainPage() {
         color={theme.colors.primary} 
         style={styles.emptyIcon} 
       />
-      <Text style={[styles.emptyTitle, { color: theme.colors.onBackground }]}>Belum Ada Catatan Perhitungan</Text>
-      <Text style={[styles.emptySubtitle, { color: theme.colors.outline }]}>Mulai dengan menambahkan catatan usaha baru Anda</Text>
+      <Text style={[styles.emptyTitle, { color: theme.colors.onBackground }]}>{t.emptyTitle}</Text>
+      <Text style={[styles.emptySubtitle, { color: theme.colors.outline }]}>{t.emptySubtitle}</Text>
       <TouchableOpacity 
         style={styles.primaryButton}
         onPress={handleAddNote}
         activeOpacity={0.85}
       >
         <MaterialIcons name="add" size={24} color="white" style={styles.buttonIcon} />
-        <Text style={styles.buttonText}>Buat Catatan Baru</Text>
+        <Text style={styles.buttonText}>{t.createNoteButton}</Text>
       </TouchableOpacity>
     </Animated.View>
   ), [width, theme, handleAddNote]);
@@ -175,8 +182,27 @@ export default function MainPage() {
   return (
     <GradientBackground>
       <View style={styles.header}>
-        <Text style={[styles.title, { color: theme.colors.primary }]}>NGITUNG</Text>
-        <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>Kelola Usaha Dengan Mudah</Text>
+        {/* Top Right Actions */}
+        <View style={styles.headerActions}>
+          <TouchableOpacity 
+            style={styles.helpButton} 
+            onPress={handleViewTutorial}
+            activeOpacity={0.8}
+          >
+            <MaterialIcons name="help-outline" size={22} color={theme.colors.primary} />
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.languageToggle} 
+            onPress={() => setLanguage(language === 'id' ? 'en' : 'id')}
+            activeOpacity={0.8}
+          >
+            <MaterialIcons name="language" size={18} color={theme.colors.primary} />
+            <Text style={[styles.languageText, { color: theme.colors.primary }]}>{language.toUpperCase()}</Text>
+          </TouchableOpacity>
+        </View>
+
+        <Text style={[styles.title, { color: theme.colors.primary }]}>{t.appTitle}</Text>
+        <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>{t.appSubtitle}</Text>
         
         {/* Search Bar dengan Glass Effect */}
         <View style={[
@@ -189,7 +215,7 @@ export default function MainPage() {
           <MaterialIcons name="search" size={22} color={theme.colors.primary} />
           <TextInput
             style={[styles.searchInput, { color: theme.colors.text }]}
-            placeholder="Cari catatan usaha..."
+            placeholder={t.searchPlaceholder}
             placeholderTextColor={theme.colors.outline}
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -226,6 +252,7 @@ export default function MainPage() {
               onPress={() => handleNavigateToDetail(note.id)}
               onSettings={() => handleOpenSettings(note)}
               theme={theme}
+              t={t}
             />
           ))
         )}
@@ -251,6 +278,7 @@ export default function MainPage() {
         onNoteNameChange={setNewNoteName}
         colorScheme={colorScheme}
         theme={theme}
+        t={t}
       />
 
       <SettingsModal
@@ -261,6 +289,7 @@ export default function MainPage() {
         onColorChange={handleColorChange}
         onDelete={handleDeleteNote}
         theme={theme}
+        t={t}
       />
     </GradientBackground>
   );
@@ -277,9 +306,23 @@ interface NoteCardProps {
   onPress: () => void;
   onSettings: () => void;
   theme: any;
+  t: any;
 }
 
-const NoteCard = React.memo(({ note, color, onPress, onSettings, theme, index }: NoteCardProps) => {
+const NoteCard = React.memo(({ note, color, onPress, onSettings, theme, index, t }: NoteCardProps) => {
+  // Format relative time for last saved
+  const getRelativeTime = (date: Date) => {
+    const now = new Date();
+    const diffInMs = now.getTime() - date.getTime();
+    const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+    
+    if (diffInDays === 0) return t.today;
+    if (diffInDays === 1) return t.yesterday;
+    if (diffInDays < 7) return `${diffInDays} ${t.daysAgo}`;
+    if (diffInDays < 30) return `${Math.floor(diffInDays / 7)} ${t.weeksAgo}`;
+    return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+  };
+
   return (
     <Animated.View 
       entering={SlideInDown.delay(100 * Math.min(10, index)).duration(300)}
@@ -320,7 +363,7 @@ const NoteCard = React.memo(({ note, color, onPress, onSettings, theme, index }:
               <View style={styles.priceItem}>
                 <MaterialIcons name="attach-money" size={18} color={theme.colors.primary} />
                 <View style={styles.priceInfo}>
-                  <Text style={[styles.priceLabel, { color: theme.colors.textSecondary }]}>Harga Jual</Text>
+                  <Text style={[styles.priceLabel, { color: theme.colors.textSecondary }]}>{t.sellingPrice}</Text>
                   <Text style={[styles.priceValue, { color: theme.colors.text }]}>{note.price || 'Rp 0'}</Text>
                 </View>
               </View>
@@ -332,7 +375,7 @@ const NoteCard = React.memo(({ note, color, onPress, onSettings, theme, index }:
               <View style={styles.priceItem}>
                 <MaterialIcons name="receipt" size={18} color={theme.colors.secondary} />
                 <View style={styles.priceInfo}>
-                  <Text style={[styles.priceLabel, { color: theme.colors.textSecondary }]}>BPP</Text>
+                  <Text style={[styles.priceLabel, { color: theme.colors.textSecondary }]}>{t.bpp}</Text>
                   <Text style={[styles.priceValue, { color: theme.colors.text }]}>{note.bpp || 'Rp 0'}</Text>
                 </View>
               </View>
@@ -342,15 +385,12 @@ const NoteCard = React.memo(({ note, color, onPress, onSettings, theme, index }:
           <View style={styles.cardFooter}>
             <View style={styles.dateContainer}>
               <MaterialIcons 
-                name="access-time" 
+                name="save" 
                 size={14} 
                 color={theme.colors.outline} 
               />
               <Text style={[styles.noteUpdated, { color: theme.colors.textSecondary }]}> 
-                {new Date(note.updatedAt).toLocaleDateString('id-ID', {
-                  day: 'numeric',
-                  month: 'short',
-                })}
+                {t.saved} {getRelativeTime(new Date(note.updatedAt))}
               </Text>
             </View>
             <View style={[styles.profitBadge, { backgroundColor: 'rgba(52, 211, 153, 0.15)' }]}>
@@ -359,7 +399,7 @@ const NoteCard = React.memo(({ note, color, onPress, onSettings, theme, index }:
                 size={14} 
                 color={theme.colors.secondary} 
               />
-              <Text style={[styles.profitText, { color: theme.colors.secondary }]}>Profit</Text>
+              <Text style={[styles.profitText, { color: theme.colors.secondary }]}>{t.profit}</Text>
             </View>
           </View>
         </View>
@@ -376,6 +416,7 @@ interface AddNoteModalProps {
   onNoteNameChange: (text: string) => void;
   colorScheme: ColorSchemeName;
   theme: any;
+  t: any;
 }
 
 const AddNoteModal = React.memo(({ 
@@ -385,7 +426,8 @@ const AddNoteModal = React.memo(({
   noteName, 
   onNoteNameChange,
   colorScheme,
-  theme
+  theme,
+  t
 }: AddNoteModalProps) => {
   const [isFocused, setIsFocused] = React.useState(false);
   
@@ -415,12 +457,12 @@ const AddNoteModal = React.memo(({
               <MaterialIcons name="note-add" size={32} color={theme.colors.primary} />
             </View>
             
-            <Text style={[styles.modalTitle, { color: theme.colors.text }]}>Buat Catatan Baru</Text>
-            <Text style={[styles.modalSubtitle, { color: theme.colors.textSecondary }]}>Mulai catat usaha Anda dengan nama yang mudah diingat</Text>
+            <Text style={[styles.modalTitle, { color: theme.colors.text }]}>{t.createNewNote}</Text>
+            <Text style={[styles.modalSubtitle, { color: theme.colors.textSecondary }]}>{t.createNewNoteSubtitle}</Text>
             
             {/* Input Container */}
             <View style={styles.inputWrapper}>
-              <Text style={[styles.inputLabel, { color: theme.colors.textSecondary }]}>Nama Usaha</Text>
+              <Text style={[styles.inputLabel, { color: theme.colors.textSecondary }]}>{t.businessName}</Text>
               <View style={[
                 styles.inputContainer,
                 { 
@@ -441,7 +483,7 @@ const AddNoteModal = React.memo(({
                       color: theme.colors.text,
                     }
                   ]}
-                  placeholder="Contoh: Bakso Ayam, ..."
+                  placeholder={t.businessNamePlaceholder}
                   placeholderTextColor={theme.colors.outline}
                   value={noteName}
                   onChangeText={onNoteNameChange}
@@ -505,6 +547,7 @@ interface SettingsModalProps {
   onColorChange: (color: string) => void;
   onDelete: () => void;
   theme: any;
+  t: any;
 }
 
 const SettingsModal = React.memo(({
@@ -514,7 +557,8 @@ const SettingsModal = React.memo(({
   availableColors,
   onColorChange,
   onDelete,
-  theme
+  theme,
+  t
 }: SettingsModalProps) => {
   if (!note) return null;
 
@@ -538,14 +582,14 @@ const SettingsModal = React.memo(({
             {/* Header */}
             <View style={styles.settingsHeader}>
               <MaterialIcons name="settings" size={28} color={theme.colors.primary} />
-              <Text style={[styles.settingsTitle, { color: theme.colors.text }]}>Pengaturan</Text>
+              <Text style={[styles.settingsTitle, { color: theme.colors.text }]}>{t.settings}</Text>
             </View>
             
             <Text style={[styles.settingsSubtitle, { color: theme.colors.textSecondary }]}>{note.name}</Text>
             
             {/* Color Picker */}
             <View style={styles.colorSection}>
-              <Text style={[styles.colorLabel, { color: theme.colors.text }]}>Warna Badge</Text>
+              <Text style={[styles.colorLabel, { color: theme.colors.text }]}>{t.colorBadge}</Text>
               <View style={styles.colorGrid}>
                 {availableColors.map((color) => (
                   <TouchableOpacity
@@ -576,7 +620,7 @@ const SettingsModal = React.memo(({
               activeOpacity={0.7}
             >
               <MaterialIcons name="delete-outline" size={24} color={theme.colors.error} />
-              <Text style={[styles.deleteNoteText, { color: theme.colors.error }]}>Hapus Catatan</Text>
+              <Text style={[styles.deleteNoteText, { color: theme.colors.error }]}>{t.deleteNote}</Text>
             </TouchableOpacity>
             
             {/* Close Button */}
@@ -585,7 +629,7 @@ const SettingsModal = React.memo(({
               style={[styles.modalButton, styles.cancelButton, { borderColor: 'rgba(255, 255, 255, 0.2)', backgroundColor: 'rgba(255, 255, 255, 0.05)' }]}
               activeOpacity={0.7}
             >
-              <Text style={[styles.modalButtonText, { color: theme.colors.text }]}>Tutup</Text>
+              <Text style={[styles.modalButtonText, { color: theme.colors.text }]}>{t.close}</Text>
             </TouchableOpacity>
           </View>
         </Animated.View>
@@ -633,6 +677,41 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: Platform.OS === 'android' ? 40 : 60,
     paddingBottom: 20,
+    position: 'relative',
+  },
+  headerActions: {
+    position: 'absolute',
+    top: Platform.OS === 'android' ? 45 : 65,
+    right: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    zIndex: 10,
+  },
+  helpButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(167, 139, 250, 0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(167, 139, 250, 0.3)',
+  },
+  languageToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(167, 139, 250, 0.15)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(167, 139, 250, 0.3)',
+  },
+  languageText: {
+    fontSize: 12,
+    fontWeight: '700',
+    marginLeft: 6,
   },
   title: {
     fontSize: 36,
